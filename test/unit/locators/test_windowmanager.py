@@ -1,318 +1,234 @@
 import unittest
-import os
-from Selenium2Library.locators import WindowManager
-from mockito import *
 import uuid
-from selenium.common.exceptions import NoSuchWindowException
+
+from mockito import mock, when
+from robot.api import logger
+
+from SeleniumLibrary.errors import WindowNotFound
+from SeleniumLibrary.locators import WindowManager
+
 
 class WindowManagerTests(unittest.TestCase):
 
     def test_select_with_invalid_prefix(self):
-        manager = WindowManager()
-        browser = mock()
-        try:
-            self.assertRaises(ValueError, manager.select, browser, "something=test1")
-        except ValueError as e:
-            self.assertEqual(e.message, "Window locator with prefix 'something' is not supported")
-
-    def test_select_with_null_browser(self):
-        manager = WindowManager()
-        self.assertRaises(AssertionError,
-            manager.select, None, "name=test1")
+        manager = WindowManagerWithMockBrowser()
+        with self.assertRaises(WindowNotFound) as context:
+            manager.select("something=test1")
+        self.assertEqual(
+            str(context.exception),
+            "No window matching handle, name, title or URL 'something=test1' found."
+        )
 
     def test_select_by_title(self):
-        manager = WindowManager()
-        browser = self._make_mock_browser(
-            { 'name': 'win1', 'title': "Title 1", 'url': 'http://localhost/page1.html' },
-            { 'name': 'win2', 'title': "Title 2", 'url': 'http://localhost/page2.html' },
-            { 'name': 'win3', 'title': "Title 3", 'url': 'http://localhost/page3.html' })
-
-        manager.select(browser, "title=Title 2")
-        self.assertEqual(browser.current_window.name, 'win2')
-
-    def test_select_by_title_sloppy_match(self):
-        manager = WindowManager()
-        browser = self._make_mock_browser(
-            { 'name': 'win1', 'title': "Title 1", 'url': 'http://localhost/page1.html' },
-            { 'name': 'win2', 'title': "Title 2", 'url': 'http://localhost/page2.html' },
-            { 'name': 'win3', 'title': "Title 3", 'url': 'http://localhost/page3.html' })
-
-        manager.select(browser, "title= tItLe 2  ")
-        self.assertEqual(browser.current_window.name, 'win2')
+        manager = WindowManagerWithMockBrowser(
+            {'name': 'win1', 'title': "Title 1", 'url': 'http://localhost/page1.html'},
+            {'name': 'win2', 'title': "Title 2", 'url': 'http://localhost/page2.html'},
+            {'name': 'win3', 'title': "Title 3", 'url': 'http://localhost/page3.html'}
+        )
+        manager.select("title=Title 2")
+        self.assertEqual(manager.driver.current_window.name, 'win2')
 
     def test_select_by_title_with_multiple_matches(self):
-        manager = WindowManager()
-        browser = self._make_mock_browser(
-            { 'name': 'win1', 'title': "Title 1", 'url': 'http://localhost/page1.html' },
-            { 'name': 'win2a', 'title': "Title 2", 'url': 'http://localhost/page2a.html' },
-            { 'name': 'win2b', 'title': "Title 2", 'url': 'http://localhost/page2b.html' })
-
-        manager.select(browser, "title=Title 2")
-        self.assertEqual(browser.current_window.name, 'win2a')
+        manager = WindowManagerWithMockBrowser(
+            {'name': 'win1', 'title': "Title 1", 'url': 'http://localhost/page1.html'},
+            {'name': 'win2a', 'title': "Title 2", 'url': 'http://localhost/page2a.html'},
+            {'name': 'win2b', 'title': "Title 2", 'url': 'http://localhost/page2b.html'}
+        )
+        manager.select("title=Title 2")
+        self.assertEqual(manager.driver.current_window.name, 'win2a')
 
     def test_select_by_title_no_match(self):
-        manager = WindowManager()
-        browser = self._make_mock_browser(
-            { 'name': 'win1', 'title': "Title 1", 'url': 'http://localhost/page1.html' },
-            { 'name': 'win2', 'title': "Title 2", 'url': 'http://localhost/page2.html' },
-            { 'name': 'win3', 'title': "Title 3", 'url': 'http://localhost/page3.html' })
-
-        try:
-            self.assertRaises(ValueError, manager.select, browser, "title=Title -1")
-        except ValueError as e:
-            self.assertEqual(e.message, "Unable to locate window with title 'Title -1'")
+        manager = WindowManagerWithMockBrowser(
+            {'name': 'win1', 'title': "Title 1", 'url': 'http://localhost/page1.html'},
+            {'name': 'win2', 'title': "Title 2", 'url': 'http://localhost/page2.html'},
+            {'name': 'win3', 'title': "Title 3", 'url': 'http://localhost/page3.html'}
+        )
+        with self.assertRaises(WindowNotFound) as context:
+            manager.select("title=Title -1")
+        self.assertEqual(str(context.exception),
+                         "Unable to locate window with title 'Title -1'.")
 
     def test_select_by_name(self):
-        manager = WindowManager()
-        browser = self._make_mock_browser(
-            { 'name': 'win1', 'title': "Title 1", 'url': 'http://localhost/page1.html' },
-            { 'name': 'win2', 'title': "Title 2", 'url': 'http://localhost/page2.html' },
-            { 'name': 'win3', 'title': "Title 3", 'url': 'http://localhost/page3.html' })
-
-        manager.select(browser, "name=win2")
-        self.assertEqual(browser.current_window.name, 'win2')
-
-    def test_select_by_name_sloppy_match(self):
-        manager = WindowManager()
-        browser = self._make_mock_browser(
-            { 'name': 'win1', 'title': "Title 1", 'url': 'http://localhost/page1.html' },
-            { 'name': 'win2', 'title': "Title 2", 'url': 'http://localhost/page2.html' },
-            { 'name': 'win3', 'title': "Title 3", 'url': 'http://localhost/page3.html' })
-
-        manager.select(browser, "name= win2  ")
-        self.assertEqual(browser.current_window.name, 'win2')
-
-    def test_select_by_name_with_bad_case(self):
-        manager = WindowManager()
-        browser = self._make_mock_browser(
-            { 'name': 'win1', 'title': "Title 1", 'url': 'http://localhost/page1.html' },
-            { 'name': 'win2', 'title': "Title 2", 'url': 'http://localhost/page2.html' },
-            { 'name': 'win3', 'title': "Title 3", 'url': 'http://localhost/page3.html' })
-
-        manager.select(browser, "name=Win2")
-        self.assertEqual(browser.current_window.name, 'win2')
+        manager = WindowManagerWithMockBrowser(
+            {'name': 'win1', 'title': "Title 1", 'url': 'http://localhost/page1.html'},
+            {'name': 'win2', 'title': "Title 2", 'url': 'http://localhost/page2.html'},
+            {'name': 'win3', 'title': "Title 3", 'url': 'http://localhost/page3.html'}
+        )
+        manager.select("name=win2")
+        self.assertEqual(manager.driver.current_window.name, 'win2')
 
     def test_select_by_name_no_match(self):
-        manager = WindowManager()
-        browser = self._make_mock_browser(
-            { 'name': 'win1', 'title': "Title 1", 'url': 'http://localhost/page1.html' },
-            { 'name': 'win2', 'title': "Title 2", 'url': 'http://localhost/page2.html' },
-            { 'name': 'win3', 'title': "Title 3", 'url': 'http://localhost/page3.html' })
-
-        try:
-            self.assertRaises(ValueError, manager.select, browser, "name=win-1")
-        except ValueError as e:
-            self.assertEqual(e.message, "Unable to locate window with name 'win-1'")
+        manager = WindowManagerWithMockBrowser(
+            {'name': 'win1', 'title': "Title 1", 'url': 'http://localhost/page1.html'},
+            {'name': 'win2', 'title': "Title 2", 'url': 'http://localhost/page2.html'},
+            {'name': 'win3', 'title': "Title 3", 'url': 'http://localhost/page3.html'}
+        )
+        with self.assertRaises(WindowNotFound) as context:
+            manager.select("name=win-1")
+        self.assertEqual(str(context.exception),
+                         "Unable to locate window with name 'win-1'.")
 
     def test_select_by_url(self):
-        manager = WindowManager()
-        browser = self._make_mock_browser(
-            { 'name': 'win1', 'title': "Title 1", 'url': 'http://localhost/page1.html' },
-            { 'name': 'win2', 'title': "Title 2", 'url': 'http://localhost/page2.html' },
-            { 'name': 'win3', 'title': "Title 3", 'url': 'http://localhost/page3.html' })
-
-        manager.select(browser, "url=http://localhost/page2.html")
-        self.assertEqual(browser.current_window.name, 'win2')
-
-    def test_select_by_url_sloppy_match(self):
-        manager = WindowManager()
-        browser = self._make_mock_browser(
-            { 'name': 'win1', 'title': "Title 1", 'url': 'http://localhost/page1.html' },
-            { 'name': 'win2', 'title': "Title 2", 'url': 'http://localhost/page2.html' },
-            { 'name': 'win3', 'title': "Title 3", 'url': 'http://localhost/page3.html' })
-
-        manager.select(browser, "url=   http://LOCALHOST/page2.html  ")
-        self.assertEqual(browser.current_window.name, 'win2')
+        manager = WindowManagerWithMockBrowser(
+            {'name': 'win1', 'title': "Title 1", 'url': 'http://localhost/page1.html'},
+            {'name': 'win2', 'title': "Title 2", 'url': 'http://localhost/page2.html'},
+            {'name': 'win3', 'title': "Title 3", 'url': 'http://localhost/page3.html'}
+        )
+        manager.select("url=http://localhost/page2.html")
+        self.assertEqual(manager.driver.current_window.name, 'win2')
 
     def test_select_by_url_with_multiple_matches(self):
-        manager = WindowManager()
-        browser = self._make_mock_browser(
-            { 'name': 'win1', 'title': "Title 1", 'url': 'http://localhost/page1.html' },
-            { 'name': 'win2a', 'title': "Title 2a", 'url': 'http://localhost/page2.html' },
-            { 'name': 'win2b', 'title': "Title 2b", 'url': 'http://localhost/page2.html' })
-
-        manager.select(browser, "url=http://localhost/page2.html")
-        self.assertEqual(browser.current_window.name, 'win2a')
+        manager = WindowManagerWithMockBrowser(
+            {'name': 'win1', 'title': "Title 1", 'url': 'http://localhost/page1.html'},
+            {'name': 'win2a', 'title': "Title 2a", 'url': 'http://localhost/page2.html'},
+            {'name': 'win2b', 'title': "Title 2b", 'url': 'http://localhost/page2.html'}
+        )
+        manager.select("url=http://localhost/page2.html")
+        self.assertEqual(manager.driver.current_window.name, 'win2a')
 
     def test_select_by_url_no_match(self):
-        manager = WindowManager()
-        browser = self._make_mock_browser(
-            { 'name': 'win1', 'title': "Title 1", 'url': 'http://localhost/page1.html' },
-            { 'name': 'win2', 'title': "Title 2", 'url': 'http://localhost/page2.html' },
-            { 'name': 'win3', 'title': "Title 3", 'url': 'http://localhost/page3.html' })
+        manager = WindowManagerWithMockBrowser(
+            {'name': 'win1', 'title': "Title 1", 'url': 'http://localhost/page1.html'},
+            {'name': 'win2', 'title': "Title 2", 'url': 'http://localhost/page2.html'},
+            {'name': 'win3', 'title': "Title 3", 'url': 'http://localhost/page3.html'}
+        )
+        with self.assertRaises(WindowNotFound) as context:
+            manager.select("url=http://localhost/page-1.html")
+        self.assertEqual(
+            str(context.exception),
+            "Unable to locate window with URL 'http://localhost/page-1.html'."
+        )
 
-        try:
-            self.assertRaises(ValueError, manager.select, browser, "url=http://localhost/page-1.html")
-        except ValueError as e:
-            self.assertEqual(e.message, "Unable to locate window with URL 'http://localhost/page-1.html'")
+    def test_select_with_deprecated_locators_to_select_main_window(self):
+        manager = WindowManagerWithMockBrowser(
+            {'name': 'win1', 'title': "Title 1", 'url': 'http://localhost/page1.html'},
+            {'name': 'win2', 'title': "Title 2", 'url': 'http://localhost/page2.html'},
+            {'name': 'win3', 'title': "Title 3", 'url': 'http://localhost/page3.html'}
+        )
+        for deprecated in [None, 'null', 'NULL', '']:
+            manager.select("name=win2")
+            msg = "Using '%s' as window locator is deprecated. Use 'main' instead." % deprecated
+            with when(logger).warn(msg).thenReturn(None):
+                manager.select(deprecated)
+            self.assertEqual(manager.driver.current_window.name, 'win1')
 
-    def test_select_with_null_locator(self):
-        manager = WindowManager()
-        browser = self._make_mock_browser(
-            { 'name': 'win1', 'title': "Title 1", 'url': 'http://localhost/page1.html' },
-            { 'name': 'win2', 'title': "Title 2", 'url': 'http://localhost/page2.html' },
-            { 'name': 'win3', 'title': "Title 3", 'url': 'http://localhost/page3.html' })
-
-        manager.select(browser, "name=win2")
-        self.assertEqual(browser.current_window.name, 'win2')
-        manager.select(browser, None)
-        self.assertEqual(browser.current_window.name, 'win1')
-
-    def test_select_with_null_string_locator(self):
-        manager = WindowManager()
-        browser = self._make_mock_browser(
-            { 'name': 'win1', 'title': "Title 1", 'url': 'http://localhost/page1.html' },
-            { 'name': 'win2', 'title': "Title 2", 'url': 'http://localhost/page2.html' },
-            { 'name': 'win3', 'title': "Title 3", 'url': 'http://localhost/page3.html' })
-
-        manager.select(browser, "name=win2")
-        self.assertEqual(browser.current_window.name, 'win2')
-        manager.select(browser, "null")
-        self.assertEqual(browser.current_window.name, 'win1')
-
-    def test_select_with_empty_locator(self):
-        manager = WindowManager()
-        browser = self._make_mock_browser(
-            { 'name': 'win1', 'title': "Title 1", 'url': 'http://localhost/page1.html' },
-            { 'name': 'win2', 'title': "Title 2", 'url': 'http://localhost/page2.html' },
-            { 'name': 'win3', 'title': "Title 3", 'url': 'http://localhost/page3.html' })
-
-        manager.select(browser, "name=win2")
-        self.assertEqual(browser.current_window.name, 'win2')
-        manager.select(browser, "")
-        self.assertEqual(browser.current_window.name, 'win1')
-
-    def test_select_with_main_constant_locator(self):
-        manager = WindowManager()
-        browser = self._make_mock_browser(
-            { 'name': 'win1', 'title': "Title 1", 'url': 'http://localhost/page1.html' },
-            { 'name': 'win2', 'title': "Title 2", 'url': 'http://localhost/page2.html' },
-            { 'name': 'win3', 'title': "Title 3", 'url': 'http://localhost/page3.html' })
-
-        manager.select(browser, "name=win2")
-        self.assertEqual(browser.current_window.name, 'win2')
-        manager.select(browser, "main")
-        self.assertEqual(browser.current_window.name, 'win1')
+    def test_select_main_window(self):
+        manager = WindowManagerWithMockBrowser(
+            {'name': 'win1', 'title': "Title 1", 'url': 'http://localhost/page1.html'},
+            {'name': 'win2', 'title': "Title 2", 'url': 'http://localhost/page2.html'},
+            {'name': 'win3', 'title': "Title 3", 'url': 'http://localhost/page3.html'}
+        )
+        manager.select("name=win2")
+        self.assertEqual(manager.driver.current_window.name, 'win2')
+        manager.select("main")
+        self.assertEqual(manager.driver.current_window.name, 'win1')
+        manager.select("MAIN")
+        self.assertEqual(manager.driver.current_window.name, 'win1')
 
     def test_select_by_default_with_name(self):
-        manager = WindowManager()
-        browser = self._make_mock_browser(
-            { 'name': 'win1', 'title': "Title 1", 'url': 'http://localhost/page1.html' },
-            { 'name': 'win2', 'title': "Title 2", 'url': 'http://localhost/page2.html' },
-            { 'name': 'win3', 'title': "Title 3", 'url': 'http://localhost/page3.html' })
-
-        manager.select(browser, "win2")
-        self.assertEqual(browser.current_window.name, 'win2')
+        manager = WindowManagerWithMockBrowser(
+            {'name': 'win1', 'title': "Title 1", 'url': 'http://localhost/page1.html'},
+            {'name': 'win2', 'title': "Title 2", 'url': 'http://localhost/page2.html'},
+            {'name': 'win3', 'title': "Title 3", 'url': 'http://localhost/page3.html'}
+        )
+        manager.select("win2")
+        self.assertEqual(manager.driver.current_window.name, 'win2')
 
     def test_select_by_default_with_title(self):
-        manager = WindowManager()
-        browser = self._make_mock_browser(
-            { 'name': 'win1', 'title': "Title 1", 'url': 'http://localhost/page1.html' },
-            { 'name': 'win2', 'title': "Title 2", 'url': 'http://localhost/page2.html' },
-            { 'name': 'win3', 'title': "Title 3", 'url': 'http://localhost/page3.html' })
-
-        manager.select(browser, "Title 2")
-        self.assertEqual(browser.current_window.name, 'win2')
+        manager = WindowManagerWithMockBrowser(
+            {'name': 'win1', 'title': "Title 1", 'url': 'http://localhost/page1.html'},
+            {'name': 'win2', 'title': "Title 2", 'url': 'http://localhost/page2.html'},
+            {'name': 'win3', 'title': "Title 3", 'url': 'http://localhost/page3.html'}
+        )
+        manager.select("Title 2")
+        self.assertEqual(manager.driver.current_window.name, 'win2')
 
     def test_select_by_default_no_match(self):
-        manager = WindowManager()
-        browser = self._make_mock_browser(
-            { 'name': 'win1', 'title': "Title 1", 'url': 'http://localhost/page1.html' },
-            { 'name': 'win2', 'title': "Title 2", 'url': 'http://localhost/page2.html' },
-            { 'name': 'win3', 'title': "Title 3", 'url': 'http://localhost/page3.html' })
-
-        try:
-            self.assertRaises(ValueError, manager.select, browser, "win-1")
-        except ValueError as e:
-            self.assertEqual(context.exception.message, "Unable to locate window with name or title 'win-1'")
-
-    def test_select_with_sloppy_prefix(self):
-        manager = WindowManager()
-        browser = self._make_mock_browser(
-            { 'name': 'win1', 'title': "Title 1", 'url': 'http://localhost/page1.html' },
-            { 'name': 'win2', 'title': "Title 2", 'url': 'http://localhost/page2.html' },
-            { 'name': 'win3', 'title': "Title 3", 'url': 'http://localhost/page3.html' })
-
-        manager.select(browser, "name=win2")
-        self.assertEqual(browser.current_window.name, 'win2')
-        manager.select(browser, "nAmE=win2")
-        self.assertEqual(browser.current_window.name, 'win2')
-        manager.select(browser, " name  =win2")
-        self.assertEqual(browser.current_window.name, 'win2')
-
-    def test_get_window_ids(self):
-        manager = WindowManager()
-        browser = self._make_mock_browser(
-            { 'id': 'win1', 'name': 'win1', 'title': "Title 1", 'url': 'http://localhost/page1.html' },
-            { 'id': 'win2', 'name': 'win2', 'title': "Title 2", 'url': 'http://localhost/page2.html' },
-            { 'name': 'win3', 'title': "Title 3", 'url': 'http://localhost/page3.html' })
-
+        manager = WindowManagerWithMockBrowser(
+            {'name': 'win1', 'title': "Title 1", 'url': 'http://localhost/page1.html'},
+            {'name': 'win2', 'title': "Title 2", 'url': 'http://localhost/page2.html'},
+            {'name': 'win3', 'title': "Title 3", 'url': 'http://localhost/page3.html'}
+        )
+        with self.assertRaises(WindowNotFound) as context:
+            manager.select('foobar')
         self.assertEqual(
-            manager.get_window_ids(browser),
-            [ 'win1', 'win2', 'undefined' ])
+            str(context.exception),
+            "No window matching handle, name, title or URL 'foobar' found."
+        )
 
-    def test_get_window_names(self):
-        manager = WindowManager()
-        browser = self._make_mock_browser(
-            { 'name': 'win1', 'title': "Title 1", 'url': 'http://localhost/page1.html' },
-            { 'name': 'win2', 'title': "Title 2", 'url': 'http://localhost/page2.html' },
-            { 'name': 'win3', 'title': "Title 3", 'url': 'http://localhost/page3.html' })
-
+    def test_prefix_is_case_sensitive(self):
+        manager = WindowManagerWithMockBrowser(
+            {'name': 'win1', 'title': "Title 1", 'url': 'http://localhost/page1.html'},
+            {'name': 'win2', 'title': "Title 2", 'url': 'http://localhost/page2.html'},
+            {'name': 'win3', 'title': "Title 3", 'url': 'http://localhost/page3.html'}
+        )
+        manager.select("name=win2")
+        self.assertEqual(manager.driver.current_window.name, 'win2')
+        with self.assertRaises(WindowNotFound) as context:
+            manager.select("nAmE=win2")
         self.assertEqual(
-            manager.get_window_names(browser),
-            [ 'win1', 'win2', 'win3' ])
+            str(context.exception),
+            "No window matching handle, name, title or URL 'nAmE=win2' found."
+        )
 
-    def test_get_window_titles(self):
-        manager = WindowManager()
-        browser = self._make_mock_browser(
-            { 'name': 'win1', 'title': "Title 1", 'url': 'http://localhost/page1.html' },
-            { 'name': 'win2', 'title': "Title 2", 'url': 'http://localhost/page2.html' },
-            { 'name': 'win3', 'title': "Title 3", 'url': 'http://localhost/page3.html' })
+    def test_get_window_infos(self):
+        manager = WindowManagerWithMockBrowser(
+            {'id': 'id1', 'name': 'win1', 'title': "Title 1", 'url': 'http://url.1'},
+            {'id': 'id2', 'name': 'win2', 'title': "Title 2", 'url': 'http://url.2'},
+            {'name': 'win3', 'title': "Title 3", 'url': 'http://url.3'}
+        )
+        self.assertEqual([info.id for info in manager.get_window_infos()],
+                         ['id1', 'id2', 'undefined'])
+        self.assertEqual([info.name for info in manager.get_window_infos()],
+                         ['win1', 'win2', 'win3'])
+        self.assertEqual([info.title for info in manager.get_window_infos()],
+                         ['Title 1', 'Title 2', 'Title 3'])
+        self.assertEqual([info.url for info in manager.get_window_infos()],
+                         ['http://url.1', 'http://url.2', 'http://url.3'])
 
-        self.assertEqual(
-            manager.get_window_titles(browser),
-            [ 'Title 1', 'Title 2', 'Title 3' ])
 
-    def _make_mock_browser(self, *window_specs):
-        browser = mock()
+class WindowManagerWithMockBrowser(WindowManager):
 
-        windows = []
-        window_handles = []
-        first_window = None
+    def __init__(self, *window_specs):
+        ctx = mock()
+        ctx.driver = self._make_mock_driver(*window_specs)
+        WindowManager.__init__(self, ctx)
+
+    def _make_mock_driver(self, *window_specs):
+        driver = mock()
+        current_window = mock()
+        driver.window_handles = []
+        window_infos = {}
         for window_spec in window_specs:
-            window = mock()
-            window.handle = uuid.uuid4().hex
-            window.id = window_spec.get('id')
-            if window.id is None:
-                window.id = 'undefined'
-            window.name = window_spec['name']
-            window.title = window_spec['title']
-            window.url = window_spec['url']
+            handle = uuid.uuid4().hex
+            driver.window_handles.append(handle)
+            id_ = window_spec.get('id')
+            if not id_:
+                id_ = 'undefined'
+            window_info = [
+                id_,
+                window_spec.get('name'),
+                window_spec.get('title'),
+                window_spec.get('url')
+            ]
+            window_infos[handle] = window_info
 
-            windows.append(window)
-            window_handles.append(window.handle)
+        def window(handle_):
+            if handle_ in driver.window_handles:
+                driver.session_id = handle_
+                current_window.name = window_infos[handle_][1]
+                driver.current_window = current_window
+                driver.title = window_infos[handle_][2]
+                driver.current_url = window_infos[handle_][3]
 
-            if first_window is None:
-                first_window = window
+        switch_to = mock()
+        switch_to.window = window
+        driver.switch_to = switch_to
 
-        def switch_to_window(handle_or_name):
-            if handle_or_name == '':
-                browser.current_window = first_window
-                return
-            for window in windows:
-                if window.handle == handle_or_name or window.name == handle_or_name:
-                    browser.current_window = window
-                    return
-            raise NoSuchWindowException(u'Unable to locate window "' + handle_or_name + '"')
+        def execute_script(script):
+            handle_ = driver.session_id
+            if handle_ in driver.window_handles:
+                return window_infos[handle_][:2]
 
-        browser.current_window = first_window
-        browser.get_current_window_handle = lambda: browser.current_window.handle
-        browser.get_title = lambda: browser.current_window.title
-        browser.get_current_url = lambda: browser.current_window.url
-        browser.get_window_handles = lambda: window_handles
-        browser.switch_to_window = switch_to_window
-        browser.get_current_window_info = lambda: (
-            browser.current_window.handle, browser.current_window.id, browser.current_window.name,
-            browser.current_window.title, browser.current_window.url)
-
-        return browser
+        driver.execute_script = execute_script
+        return driver

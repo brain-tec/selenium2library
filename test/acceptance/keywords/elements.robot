@@ -2,24 +2,24 @@
 Documentation     Tests elements
 Test Setup        Go To Page "links.html"
 Resource          ../resource.robot
+Library           String
 
 *** Test Cases ***
 Get Elements
-    [Documentation]    Get Elements
     @{links}=    Get WebElements    //div[@id="div_id"]/a
     Length Should Be    ${links}    11
+    ${no_elements} =     Get WebElements    id:non_existing_elem
+    Should Be Empty    ${no_elements}
 
 Get Web Element
-    [Documentation]    Get Web Element
     @{links}=    Get WebElements    //div[@id="div_id"]/a
     ${link}=    Get WebElement    //div[@id="div_id"]/a
     Should Be Equal    @{links}[0]    ${link}
     Run Keyword and Expect Error
-    ...    ValueError: Element locator 'id=non_existing_elem' did not match any elements.
+    ...    Element with locator 'id=non_existing_elem' not found.
     ...    Get WebElement    id=non_existing_elem
 
 More Get Elements
-    [Documentation]    More Get Elements
     [Setup]    Go To Page "forms/prefilled_email_form.html"
     @{checkboxes}=    Get WebElements    //input[@type="checkbox"]
     Length Should Be    ${checkboxes}    2
@@ -33,7 +33,6 @@ More Get Elements
     \    Checkbox Should Be Selected    ${checkbox}
 
 Assign Id To Element
-    [Documentation]    Tests also Reload Page keyword.
     Page Should Not Contain Element    my id
     Assign ID to Element    xpath=//div[@id="first_div"]    my id
     Page Should Contain Element    my id
@@ -41,42 +40,44 @@ Assign Id To Element
     Page Should Not Contain Element    my id
 
 Get Element Attribute
-    [Documentation]    Get Element Attribute
     ${id}=    Get Element Attribute    link=Link with id@id
     Should Be Equal    ${id}    some_id
     ${id}=    Get Element Attribute    dom=document.getElementsByTagName('a')[3]@id
     Should Be Equal    ${id}    some_id
     ${class}=    Get Element Attribute    second_div@class
     Should Be Equal    ${class}    Second Class
-
-Get Matching XPath Count
-    [Documentation]    Get Matching XPath Count
-    ${count}=    Get Matching XPath Count    //a
-    Should Be Equal    ${count}    19
-    ${count}=    Get Matching XPath Count    //div[@id="first_div"]/a
-    Should Be Equal    ${count}    2
+    ${id}=    Get Element Attribute    link=Link with id    id
+    Should Be Equal    ${id}    some_id
+    ${element_by_dom}=    Get Webelement    dom=document.getElementsByTagName('a')[3]
+    ${id}=    Get Element Attribute    ${element_by_dom}    id
+    Should Be Equal    ${id}    some_id
+    ${second_div}=    Get Webelement    second_div
+    ${class}=    Get Element Attribute    ${second_div}    class
+    Should Be Equal    ${class}    Second Class
 
 Get Horizontal Position
-    [Documentation]    Get Horizontal Position
     ${pos}=    Get Horizontal Position    link=Link
-    Should Be True    ${pos} > ${0}
-    Run Keyword And Expect Error    Could not determine position for 'non-existent'
+    Should Be True    ${pos} > 0
+    Run Keyword And Expect Error
+    ...    Element with locator 'non-existent' not found.
     ...    Get Horizontal Position    non-existent
 
 Get Vertical Position
-    [Documentation]    Get Vertical Position
     ${pos}=    Get Vertical Position    link=Link
-    Should Be True    ${pos} > ${0}
-    Run Keyword And Expect Error    Could not determine position for 'non-existent'
+    Should Be True    ${pos} > 0
+    Run Keyword And Expect Error
+    ...    Element with locator 'non-existent' not found.
     ...    Get Horizontal Position    non-existent
 
-
 Get Element Size
-	${width}  ${height}=  Get Element Size  link=Link
-	Should be True  ${height} > ${0}
-	Should be True  ${width} > ${0}
-	Run Keyword And Expect Error  ValueError: Element locator 'non-existent' did not match any elements.  Get Element Size  non-existent
+    ${width}  ${height}=  Get Element Size  link=Link
+    Should be True  ${height} > 0
+    Should be True  ${width} > 0
+    Run Keyword And Expect Error
+    ...    Element with locator 'non-existent' not found.
+    ...    Get Element Size  non-existent
 
 Get Empty Element Size
+    [Tags]  Known Issue Internet Explorer
     ${width}  ${height}=  Get Element Size  id=emptyDiv
-  	Should be True  ${height} == 0
+    Should be Equal    ${height}    ${0}

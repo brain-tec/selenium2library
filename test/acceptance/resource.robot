@@ -1,22 +1,25 @@
 *** Setting ***
-Library           Selenium2Library    run_on_failure=Nothing    implicit_wait=0
+Library           SeleniumLibrary    run_on_failure=Nothing    implicit_wait=0.2 seconds
 Library           Collections
 Library           OperatingSystem
+Library           DateTime
 
 *** Variable ***
-${SERVER}         localhost:7000
-${BROWSER}        firefox
-${REMOTE_URL}     ${NONE}
-${DESIRED_CAPABILITIES}    ${NONE}
-${ROOT}           http://${SERVER}/html
-${FRONT PAGE}     ${ROOT}/
-${SPEED}          0
+${SERVER}=         localhost:7000
+${BROWSER}=        firefox
+${REMOTE_URL}=     ${NONE}
+${DESIRED_CAPABILITIES}=    ${NONE}
+${ROOT}=           http://${SERVER}/html
+${FRONT_PAGE}=     ${ROOT}/
+${SPEED}=          0
 
 *** Keyword ***
 Open Browser To Start Page
     [Documentation]    This keyword also tests 'Set Selenium Speed' and 'Set Selenium Timeout'
     ...    against all reason.
-    ${default speed}    ${default timeout} =    Open Browser To Start Page Without Testing Default Options
+    ${default speed}    ${default timeout}=    Open Browser To Start Page Without Testing Default Options
+    # FIXME: We shouldn't test anything here. If this stuff isn't tested elsewhere, new *tests* needs to be added.
+    # FIXME: The second test below verifies a hard coded return value!!?!
     Should Be Equal    ${default speed}    0 seconds
     Should Be Equal    ${default timeout}    5 seconds
 
@@ -69,4 +72,12 @@ Set ${level} Loglevel
 
 Verify Location Is "${relative url}"
     [Documentation]    Verifies location
-    Location Should Be    ${ROOT}/${relative url}
+    Wait Until Keyword Succeeds    5    1    Location Should Be    ${ROOT}/${relative url}
+
+Set Global Timeout
+    [Arguments]    ${timeout}
+    ${previous} =    Set Selenium timeout    ${timeout}
+    Set Suite Variable    ${PREVIOUS TIMEOUT}    ${previous}
+
+Restore Global Timeout
+    Set Selenium timeout    ${PREVIOUS TIMEOUT}

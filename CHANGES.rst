@@ -1,6 +1,29 @@
 Release Notes
 =============
 
+3.0.0
+-----
+- Added 'Get Locations' keyword [thaffenden]
+- Fix getting window information and switching windows on browsers that do not
+  support javascript
+- Added 'Get Cookie' keyword [wappowers]
+- Added 'expiry' as value that can be set with 'Add Cookie' keyword [wappowers]
+
+1.8.0
+-----
+- Moved keyword documentation to:
+  http://robotframework.org/Selenium2Library/Selenium2Library.html
+- Library demo project was removed, users shoud use demo from:
+  https://bitbucket.org/robotframework/webdemo
+- docutils was removed as installation dependency.
+- Edge browser support was added to Open Browser keyword [jfx].
+- Unselect From List keyword was updated because selenium 2.53.0 or greater
+  raised an exception if item can not be unselected.
+- Get Element Size keyword was added [SergiuTudos]
+- Alert handling was improved to wait alert be present
+- Capture Page Screenshot keyword was enhanced to support custom index definition
+  in the filename
+
 1.7.4
 -------------------
 - Reverted 'Press Keys' because of backwards incompatible changes [zephraph]
@@ -265,7 +288,7 @@ continuous integration builds to go green by fixing internal tests.
 
 - Fixed issue with select window under IE. Also addresses issue with Firefox
   when using selenum 2.25.0
-  (see http://code.google.com/p/selenium/issues/detail?id=4375).
+  (see https://github.com/seleniumhq/selenium-google-code-issue-archive/issues/4375.
   [adwu73]
 
 - Added iframe support by removing strict filtering for only <frame> elements.
