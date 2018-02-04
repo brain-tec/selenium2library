@@ -14,40 +14,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os.path
 import time
 import types
 
-from robot.utils import NormalizedDict
 from selenium import webdriver
 
 from SeleniumLibrary.base import keyword, LibraryComponent
 from SeleniumLibrary.locators import WindowManager
-from SeleniumLibrary.utils import (is_falsy, is_truthy, secs_to_timestr,
-                                   timestr_to_secs, SELENIUM_VERSION)
+from SeleniumLibrary.utils import (is_truthy, is_noney, secs_to_timestr,
+                                   timestr_to_secs)
 
-
-ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-FIREFOX_PROFILE_DIR = os.path.join(ROOT_DIR, 'resources', 'firefoxprofile')
-BROWSER_NAMES = NormalizedDict({
-    'ff': "_make_ff",
-    'firefox': "_make_ff",
-    'ie': "_make_ie",
-    'internetexplorer': "_make_ie",
-    'googlechrome': "_make_chrome",
-    'gc': "_make_chrome",
-    'chrome': "_make_chrome",
-    'opera': "_make_opera",
-    'phantomjs': "_make_phantomjs",
-    'htmlunit': "_make_htmlunit",
-    'htmlunitwithjs': "_make_htmlunitwithjs",
-    'android': "_make_android",
-    'iphone': "_make_iphone",
-    'safari': "_make_safari",
-    'edge': "_make_edge",
-    'headlessfirefox': '_make_headless_ff',
-    'headlesschrome': '_make_headless_chrome'
-})
+from .webdrivertools import WebDriverCreator
 
 
 class BrowserManagementKeywords(LibraryComponent):
@@ -116,12 +93,13 @@ class BrowserManagementKeywords(LibraryComponent):
         opened, and reset back to 1 when `Close All Browsers` is called.
         See `Switch Browser` for more information and examples.
 
-        Optional ``remote_url`` is the URL for a remote Selenium server. If
-        you specify a value for a remote, you can also specify
-        ``desired_capabilities`` to configure, for example, a proxy server
-        for Internet Explorer or a browser and operating system when using
-        [http://saucelabs.com|Sauce Labs]. Desired capabilities can be given
-        either as a Python dictionary or as a string in format
+        Optional ``remote_url`` is the URL for a
+        [https://github.com/SeleniumHQ/selenium/wiki/Grid2|Selenium Grid].
+
+        Optional ``desired_capabilities`` can be used to configure, for example,
+        logging preferences for a browser or a browser and operating system
+        when using [http://saucelabs.com|Sauce Labs]. Desired capabilities can
+        be given either as a Python dictionary or as a string in format
         ``key1:value1,key2:value2``.
         [https://github.com/SeleniumHQ/selenium/wiki/DesiredCapabilities|
         Selenium documentation] lists possible capabilities that can be
@@ -140,14 +118,16 @@ class BrowserManagementKeywords(LibraryComponent):
         If the provided configuration options are not enough, it is possible
         to use `Create Webdriver` to customize browser initialization even
         more.
+
+        Applying ``desired_capabilities`` argument also for local browser is
+        new in SeleniumLibrary 3.1.
         """
         if is_truthy(remote_url):
             self.info("Opening browser '%s' to base url '%s' through "
                       "remote server at '%s'." % (browser, url, remote_url))
         else:
             self.info("Opening browser '%s' to base url '%s'." % (browser, url))
-        browser_name = browser
-        driver = self._make_driver(browser_name, desired_capabilities,
+        driver = self._make_driver(browser, desired_capabilities,
                                    ff_profile_dir, remote_url)
         try:
             driver.get(url)
@@ -303,12 +283,19 @@ class BrowserManagementKeywords(LibraryComponent):
         return title
 
     @keyword
-    def title_should_be(self, title):
-        """Verifies that current page title equals ``title``."""
+    def title_should_be(self, title, message=None):
+        """Verifies that current page title equals ``title``.
+
+        The ``message`` argument can be used to override the default error
+        message.
+
+        ``message`` argument is new in SeleniumLibrary 3.1.
+        """
         actual = self.get_title()
         if actual != title:
-            raise AssertionError("Title should have been '%s' but was '%s'."
-                                 % (title, actual))
+            if is_noney(message):
+                message = "Title should have been '%s' but was '%s'." % (title, actual)
+            raise AssertionError(message)
         self.info("Page title is '%s'." % title)
 
     @keyword
@@ -434,144 +421,16 @@ class BrowserManagementKeywords(LibraryComponent):
         """
         self.driver.implicitly_wait(timestr_to_secs(value))
 
-    def _get_driver_creation_function(self, browser_name):
-        try:
-            func_name = BROWSER_NAMES[browser_name]
-        except KeyError:
-            raise ValueError(browser_name + " is not a supported browser.")
-        return getattr(self, func_name)
-
-    def _make_driver(self, browser_name, desired_capabilities=None,
+    def _make_driver(self, browser, desired_capabilities=None,
                      profile_dir=None, remote=None):
-        creation_func = self._get_driver_creation_function(browser_name)
-        driver = creation_func(remote, desired_capabilities, profile_dir)
+        driver = WebDriverCreator(self.log_dir).create_driver(
+            browser=browser, desired_capabilities=desired_capabilities,
+            remote_url=remote, profile_dir=profile_dir)
         driver.set_script_timeout(self.ctx.timeout)
         driver.implicitly_wait(self.ctx.implicit_wait)
         if self.ctx.speed:
             self._monkey_patch_speed(driver)
         return driver
-
-    def _make_ff(self, remote, desired_capabilities, profile_dir, options=None):
-        if is_falsy(profile_dir):
-            profile = webdriver.FirefoxProfile()
-        else:
-            profile = webdriver.FirefoxProfile(profile_dir)
-        if is_truthy(remote):
-            driver = self._create_remote_web_driver(
-                webdriver.DesiredCapabilities.FIREFOX, remote,
-                desired_capabilities, profile, options=options)
-        else:
-            driver = webdriver.Firefox(firefox_profile=profile,
-                                       options=options,
-                                       **self._geckodriver_log_config)
-        return driver
-
-    def _make_headless_ff(self, remote, desired_capabilities, profile_dir):
-        options = webdriver.FirefoxOptions()
-        options.set_headless()
-        return self._make_ff(remote, desired_capabilities, profile_dir, options=options)
-
-    def _make_ie(self, remote, desired_capabilities, profile_dir):
-        return self._generic_make_driver(
-            webdriver.Ie, webdriver.DesiredCapabilities.INTERNETEXPLORER,
-            remote, desired_capabilities)
-
-    def _make_chrome(self, remote, desired_capabilities, profile_dir, options=None):
-        return self._generic_make_driver(
-            webdriver.Chrome, webdriver.DesiredCapabilities.CHROME, remote,
-            desired_capabilities, options=options)
-
-    def _make_headless_chrome(self, remote, desired_capabilities, profile_dir):
-        options = webdriver.ChromeOptions()
-        options.set_headless()
-        return self._make_chrome(remote, desired_capabilities, profile_dir, options)
-
-    def _make_opera(self, remote, desired_capabilities, profile_dir):
-        return self._generic_make_driver(
-            webdriver.Opera, webdriver.DesiredCapabilities.OPERA, remote,
-            desired_capabilities)
-
-    def _make_phantomjs(self, remote, desired_capabilities, profile_dir):
-        return self._generic_make_driver(
-            webdriver.PhantomJS, webdriver.DesiredCapabilities.PHANTOMJS,
-            remote, desired_capabilities)
-
-    def _make_htmlunit(self, remote, desired_capabilities, profile_dir):
-        return self._generic_make_driver(
-            webdriver.Remote, webdriver.DesiredCapabilities.HTMLUNIT, remote,
-            desired_capabilities)
-
-    def _make_htmlunitwithjs(self, remote, desired_capabilities, profile_dir):
-        return self._generic_make_driver(
-            webdriver.Remote, webdriver.DesiredCapabilities.HTMLUNITWITHJS,
-            remote, desired_capabilities)
-
-    def _make_android(self, remote, desired_capabilities, profile_dir):
-        return self._generic_make_driver(
-            webdriver.Remote, webdriver.DesiredCapabilities.ANDROID, remote,
-            desired_capabilities)
-
-    def _make_iphone(self, remote, desired_capabilities, profile_dir):
-        return self._generic_make_driver(
-            webdriver.Remote, webdriver.DesiredCapabilities.IPHONE, remote,
-            desired_capabilities)
-
-    def _make_safari(self, remote, desired_capabilities, profile_dir):
-        return self._generic_make_driver(
-            webdriver.Safari, webdriver.DesiredCapabilities.SAFARI, remote,
-            desired_capabilities)
-
-    def _make_edge(self, remote, desired_capabilities, profile_dir):
-        return self._generic_make_driver(
-            webdriver.Edge, webdriver.DesiredCapabilities.EDGE, remote,
-            desired_capabilities)
-
-    def _generic_make_driver(self, webdriver_type, desired_cap_type,
-                             remote_url, desired_caps, options=None):
-        """Generic driver creation
-
-        Most of the make driver functions just call this function which
-        creates the appropriate driver
-        """
-        if is_falsy(remote_url):
-            if options is None:
-                driver = webdriver_type()
-            else:
-                driver = webdriver_type(options=options)
-        else:
-            driver = self._create_remote_web_driver(desired_cap_type,
-                                                    remote_url, desired_caps,
-                                                    options=options)
-        return driver
-
-    def _create_remote_web_driver(self, capabilities_type, remote_url,
-                                  desired_capabilities=None, profile=None,
-                                  options=None):
-        '''parses the string based desired_capabilities if neccessary and
-        creates the associated remote web driver'''
-
-        desired_capabilities_object = capabilities_type.copy()
-        if not isinstance(desired_capabilities, dict):
-            desired_capabilities = self._parse_capabilities_string(desired_capabilities)
-        desired_capabilities_object.update(desired_capabilities or {})
-        return webdriver.Remote(desired_capabilities=desired_capabilities_object,
-                command_executor=str(remote_url), browser_profile=profile,
-                options=options)
-
-    def _parse_capabilities_string(self, capabilities_string):
-        '''parses the string based desired_capabilities which should be in the form
-        key1:val1,key2:val2
-        '''
-        desired_capabilities = {}
-
-        if is_falsy(capabilities_string):
-            return desired_capabilities
-
-        for cap in capabilities_string.split(","):
-            (key, value) = cap.split(":", 1)
-            desired_capabilities[key.strip()] = value.strip()
-
-        return desired_capabilities
 
     def _monkey_patch_speed(self, driver):
         def execute(self, driver_command, params=None):
@@ -584,9 +443,3 @@ class BrowserManagementKeywords(LibraryComponent):
             driver._base_execute = driver.execute
             driver.execute = types.MethodType(execute, driver)
         driver._speed = self.ctx.speed
-
-    @property
-    def _geckodriver_log_config(self):
-        if SELENIUM_VERSION.major == '3':
-            return {'log_path': os.path.join(self.log_dir, 'geckodriver.log')}
-        return {}
