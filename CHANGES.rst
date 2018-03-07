@@ -3,12 +3,16 @@ Release Notes
 
 3.2.0
 -----
+To be defined.
+
+3.1.1
+-----
 - Added `Element Text Should Not Be` to check a element text is not the argument, you can ignore case with `ignore_case=True` [rubygeek]
 
 3.1.0
 -----
 - Added a message param to `Title Should Be` to display custom error message [rubygeek]
-- Compare text regardless of case in: `Element Should Contain`, `Element Should Not Contain` and `Element Text Should Be` by passing `ignore_case=True`. The default is `False` [rubygeek] 
+- Compare text regardless of case in: `Element Should Contain`, `Element Should Not Contain` and `Element Text Should Be` by passing `ignore_case=True`. The default is `False` [rubygeek]
 
 3.0.1
 -----
