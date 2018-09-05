@@ -364,7 +364,7 @@ class ElementKeywords(LibraryComponent):
             raise AssertionError(message)
 
     @keyword
-    def get_element_attribute(self, locator, attribute=None):
+    def get_element_attribute(self, locator, attribute):
         """Returns value of ``attribute`` from element ``locator``.
 
         See the `Locating elements` section for details about the locator
@@ -373,14 +373,10 @@ class ElementKeywords(LibraryComponent):
         Example:
         | ${id}= | `Get Element Attribute` | css:h1 | id |
 
-        Passing attribute name as part of the ``locator`` is deprecated
-        since SeleniumLibrary 3.0. The explicit ``attribute`` argument
+        Passing attribute name as part of the ``locator`` was removed
+        in SeleniumLibrary 3.2. The explicit ``attribute`` argument
         should be used instead.
         """
-        if is_noney(attribute):
-            self.warn("Using 'Get Element Attribute' without explicit "
-                      "attribute is deprecated.")
-            locator, attribute = locator.rsplit('@', 1)
         return self.find_element(locator).get_attribute(attribute)
 
     @keyword
@@ -554,7 +550,7 @@ class ElementKeywords(LibraryComponent):
 
     @keyword
     def focus(self, locator):
-        """Deprecated. Use `Set Focus To Element` instead."""
+        """*DEPRECATED in SeleniumLibrary 3.2.* Use `Set Focus To Element` instead."""
         self.set_focus_to_element(locator)
 
     @keyword
@@ -693,7 +689,7 @@ return !element.dispatchEvent(evt);
 
     @keyword
     def simulate(self, locator, event):
-        """Deprecated. Use `Simulate Event` instead."""
+        """*DEPRECATED in SeleniumLibrary 3.2.* Use `Simulate Event` instead."""
         self.simulate_event(locator, event)
 
     @keyword
@@ -829,13 +825,13 @@ return !element.dispatchEvent(evt);
 
     @keyword
     def get_matching_xpath_count(self, xpath, return_str=True):
-        """Deprecated. Use `Get Element Count` instead."""
+        """*DEPRECATED in SeleniumLibrary 3.2.* Use `Get Element Count` instead."""
         count = self.get_element_count('xpath:' + xpath)
         return str(count) if is_truthy(return_str) else count
 
     @keyword
     def xpath_should_match_x_times(self, xpath, x, message=None, loglevel='INFO'):
-        """Deprecated, use `Page Should Contain Element` with ``limit`` argument instead."""
+        """*DEPRECATED in SeleniumLibrary 3.2.* Use `Page Should Contain Element` with ``limit`` argument instead."""
         self.locator_should_match_x_times('xpath:'+xpath, x, message, loglevel)
 
     @keyword
