@@ -55,11 +55,8 @@ class WebDriverCreatorTests(unittest.TestCase):
     def test_chrome(self):
         expected_webdriver = mock()
         caps = webdriver.DesiredCapabilities.CHROME
-        if SELENIUM_VERSION.major >= 3 and SELENIUM_VERSION.minor >= 8:
-            when(webdriver).Chrome(desired_capabilities=caps,
-                                   options=None).thenReturn(expected_webdriver)
-        else:
-            when(webdriver).Chrome(desired_capabilities=caps).thenReturn(expected_webdriver)
+        when(webdriver).Chrome(desired_capabilities=caps,
+                               options=None).thenReturn(expected_webdriver)
         driver = self.creator.create_chrome({}, None)
         self.assertEqual(driver, expected_webdriver)
 
@@ -69,7 +66,8 @@ class WebDriverCreatorTests(unittest.TestCase):
         caps = webdriver.DesiredCapabilities.CHROME
         when(webdriver).Remote(command_executor=url,
                                desired_capabilities=caps,
-                               browser_profile=None).thenReturn(expected_webdriver)
+                               browser_profile=None,
+                               options=None).thenReturn(expected_webdriver)
         driver = self.creator.create_chrome({}, url)
         self.assertEqual(driver, expected_webdriver)
 
@@ -78,16 +76,23 @@ class WebDriverCreatorTests(unittest.TestCase):
         expected_webdriver = mock()
         options = mock()
         when(webdriver).ChromeOptions().thenReturn(options)
-        if SELENIUM_VERSION.major >= 3 and SELENIUM_VERSION.minor >= 8:
-            when(webdriver).Chrome(desired_capabilities=caps,
-                                   options=options).thenReturn(expected_webdriver)
-        else:
-            when(webdriver).Chrome(desired_capabilities=caps).thenReturn(expected_webdriver)
+        when(webdriver).Chrome(desired_capabilities=caps,
+                               options=options).thenReturn(expected_webdriver)
         driver = self.creator.create_headless_chrome({}, None)
-        if SELENIUM_VERSION.major >= 3 and SELENIUM_VERSION.minor >= 8:
-            verify(options).set_headless()
-        else:
-            verify(options, times=0).set_headless()
+        verify(options).set_headless()
+        self.assertEqual(driver, expected_webdriver)
+
+    def test_chrome_healdless_with_grid(self):
+        caps = webdriver.DesiredCapabilities.CHROME
+        expected_webdriver = mock()
+        options = mock()
+        when(webdriver).ChromeOptions().thenReturn(options)
+        remote_url = 'localhost:4444'
+        when(webdriver).Remote(command_executor=remote_url,
+                               desired_capabilities=caps, options=options,
+                               browser_profile=None,).thenReturn(expected_webdriver)
+        driver = self.creator.create_headless_chrome({}, remote_url)
+        verify(options).set_headless()
         self.assertEqual(driver, expected_webdriver)
 
     def test_firefox(self):
@@ -95,15 +100,10 @@ class WebDriverCreatorTests(unittest.TestCase):
         profile = mock()
         when(webdriver).FirefoxProfile().thenReturn(profile)
         caps = webdriver.DesiredCapabilities.FIREFOX
-        if SELENIUM_VERSION.major >= 3 and SELENIUM_VERSION.minor >= 8:
-            log_file = self.get_geckodriver_log()
-            when(webdriver).Firefox(capabilities=caps,
-                                    options=None,
-                                    firefox_profile=profile,
-                                    log_path=log_file).thenReturn(expected_webdriver)
-        else:
-            when(webdriver).Firefox(capabilities=caps,
-                                    firefox_profile=profile).thenReturn(expected_webdriver)
+        log_file = self.get_geckodriver_log()
+        when(webdriver).Firefox(capabilities=caps, options=None,
+                                firefox_profile=profile,
+                                log_path=log_file).thenReturn(expected_webdriver)
         driver = self.creator.create_firefox({}, None, None)
         self.assertEqual(driver, expected_webdriver)
         verify(webdriver).FirefoxProfile()
@@ -116,7 +116,8 @@ class WebDriverCreatorTests(unittest.TestCase):
         caps = webdriver.DesiredCapabilities.FIREFOX
         when(webdriver).Remote(command_executor=url,
                                desired_capabilities=caps,
-                               browser_profile=profile).thenReturn(expected_webdriver)
+                               browser_profile=profile,
+                               options=None).thenReturn(expected_webdriver)
         driver = self.creator.create_firefox({}, url, None)
         self.assertEqual(driver, expected_webdriver)
 
@@ -126,15 +127,10 @@ class WebDriverCreatorTests(unittest.TestCase):
         profile_dir = '/profile/dir'
         when(webdriver).FirefoxProfile(profile_dir).thenReturn(profile)
         caps = webdriver.DesiredCapabilities.FIREFOX
-        if SELENIUM_VERSION.major >= 3 and SELENIUM_VERSION.minor >= 8:
-            log_file = self.get_geckodriver_log()
-            when(webdriver).Firefox(capabilities=caps,
-                                    options=None,
-                                    log_path=log_file,
-                                    firefox_profile=profile).thenReturn(expected_webdriver)
-        else:
-            when(webdriver).Firefox(capabilities=caps,
-                                    firefox_profile=profile).thenReturn(expected_webdriver)
+        log_file = self.get_geckodriver_log()
+        when(webdriver).Firefox(capabilities=caps, options=None,
+                                log_path=log_file,
+                                firefox_profile=profile).thenReturn(expected_webdriver)
         driver = self.creator.create_firefox({}, None, profile_dir)
         self.assertEqual(driver, expected_webdriver)
 
@@ -143,18 +139,28 @@ class WebDriverCreatorTests(unittest.TestCase):
         caps = webdriver.DesiredCapabilities.FIREFOX
         profile = mock()
         when(webdriver).FirefoxProfile().thenReturn(profile)
-        if SELENIUM_VERSION.major >= 3 and SELENIUM_VERSION.minor >= 8:
-            options = mock()
-            when(webdriver).FirefoxOptions().thenReturn(options)
-            log_file = self.get_geckodriver_log()
-            when(webdriver).Firefox(capabilities=caps,
-                                    options=options,
-                                    log_path=log_file,
-                                    firefox_profile=profile).thenReturn(expected_webdriver)
-        else:
-            when(webdriver).Firefox(capabilities=caps,
-                                    firefox_profile=profile).thenReturn(expected_webdriver)
+        options = mock()
+        when(webdriver).FirefoxOptions().thenReturn(options)
+        log_file = self.get_geckodriver_log()
+        when(webdriver).Firefox(capabilities=caps, options=options,
+                                log_path=log_file,
+                                firefox_profile=profile).thenReturn(expected_webdriver)
         driver = self.creator.create_headless_firefox({}, None, None)
+        self.assertEqual(driver, expected_webdriver)
+
+    def test_firefox_healdless_with_grid(self):
+        caps = webdriver.DesiredCapabilities.FIREFOX
+        expected_webdriver = mock()
+        options = mock()
+        when(webdriver).FirefoxOptions().thenReturn(options)
+        profile = mock()
+        when(webdriver).FirefoxProfile().thenReturn(profile)
+        remote_url = 'localhost:4444'
+        when(webdriver).Remote(command_executor=remote_url,
+                               desired_capabilities=caps, options=options,
+                               browser_profile=profile,).thenReturn(expected_webdriver)
+        driver = self.creator.create_headless_firefox({}, remote_url, None)
+        verify(options).set_headless()
         self.assertEqual(driver, expected_webdriver)
 
     def test_ie(self):
@@ -170,7 +176,8 @@ class WebDriverCreatorTests(unittest.TestCase):
         caps = webdriver.DesiredCapabilities.INTERNETEXPLORER
         when(webdriver).Remote(command_executor=url,
                                desired_capabilities=caps,
-                               browser_profile=None).thenReturn(expected_webdriver)
+                               browser_profile=None,
+                               options=None).thenReturn(expected_webdriver)
         driver = self.creator.create_ie({}, url)
         self.assertEqual(driver, expected_webdriver)
 
@@ -187,7 +194,8 @@ class WebDriverCreatorTests(unittest.TestCase):
         caps = webdriver.DesiredCapabilities.EDGE
         when(webdriver).Remote(command_executor=url,
                                desired_capabilities=caps,
-                               browser_profile=None).thenReturn(expected_webdriver)
+                               browser_profile=None,
+                               options=None).thenReturn(expected_webdriver)
         driver = self.creator.create_edge({}, url)
         self.assertEqual(driver, expected_webdriver)
 
@@ -204,7 +212,8 @@ class WebDriverCreatorTests(unittest.TestCase):
         caps = webdriver.DesiredCapabilities.OPERA
         when(webdriver).Remote(command_executor=url,
                                desired_capabilities=caps,
-                               browser_profile=None).thenReturn(expected_webdriver)
+                               browser_profile=None,
+                               options=None).thenReturn(expected_webdriver)
         driver = self.creator.create_opera({}, url)
         self.assertEqual(driver, expected_webdriver)
 
@@ -221,7 +230,8 @@ class WebDriverCreatorTests(unittest.TestCase):
         caps = webdriver.DesiredCapabilities.SAFARI
         when(webdriver).Remote(command_executor=url,
                                desired_capabilities=caps,
-                               browser_profile=None).thenReturn(expected_webdriver)
+                               browser_profile=None,
+                               options=None).thenReturn(expected_webdriver)
         driver = self.creator.create_safari({}, url)
         self.assertEqual(driver, expected_webdriver)
 
@@ -238,7 +248,8 @@ class WebDriverCreatorTests(unittest.TestCase):
         caps = webdriver.DesiredCapabilities.PHANTOMJS
         when(webdriver).Remote(command_executor=url,
                                desired_capabilities=caps,
-                               browser_profile=None).thenReturn(expected_webdriver)
+                               browser_profile=None,
+                               options=None).thenReturn(expected_webdriver)
         driver = self.creator.create_phantomjs({}, url)
         self.assertEqual(driver, expected_webdriver)
 
@@ -247,7 +258,8 @@ class WebDriverCreatorTests(unittest.TestCase):
         caps = webdriver.DesiredCapabilities.HTMLUNIT
         when(webdriver).Remote(command_executor='None',
                                desired_capabilities=caps,
-                               browser_profile=None).thenReturn(expected_webdriver)
+                               browser_profile=None,
+                               options=None).thenReturn(expected_webdriver)
         driver = self.creator.create_htmlunit({}, None)
         self.assertEqual(driver, expected_webdriver)
 
@@ -256,7 +268,8 @@ class WebDriverCreatorTests(unittest.TestCase):
         caps = webdriver.DesiredCapabilities.HTMLUNITWITHJS
         when(webdriver).Remote(command_executor='None',
                                desired_capabilities=caps,
-                               browser_profile=None).thenReturn(expected_webdriver)
+                               browser_profile=None,
+                               options=None).thenReturn(expected_webdriver)
         driver = self.creator.create_htmlunit_with_js({}, None)
         self.assertEqual(driver, expected_webdriver)
 
@@ -265,7 +278,8 @@ class WebDriverCreatorTests(unittest.TestCase):
         caps = webdriver.DesiredCapabilities.ANDROID
         when(webdriver).Remote(command_executor='None',
                                desired_capabilities=caps,
-                               browser_profile=None).thenReturn(expected_webdriver)
+                               browser_profile=None,
+                               options=None).thenReturn(expected_webdriver)
         driver = self.creator.create_android({}, None)
         self.assertEqual(driver, expected_webdriver)
 
@@ -274,18 +288,16 @@ class WebDriverCreatorTests(unittest.TestCase):
         caps = webdriver.DesiredCapabilities.IPHONE
         when(webdriver).Remote(command_executor='None',
                                desired_capabilities=caps,
-                               browser_profile=None).thenReturn(expected_webdriver)
+                               browser_profile=None,
+                               options=None).thenReturn(expected_webdriver)
         driver = self.creator.create_iphone({}, None)
         self.assertEqual(driver, expected_webdriver)
 
     def test_create_driver_chrome(self):
         expected_webdriver = mock()
         caps = webdriver.DesiredCapabilities.CHROME
-        if SELENIUM_VERSION.major >= 3 and SELENIUM_VERSION.minor >= 8:
-            when(webdriver).Chrome(desired_capabilities=caps,
+        when(webdriver).Chrome(desired_capabilities=caps,
                                    options=None).thenReturn(expected_webdriver)
-        else:
-            when(webdriver).Chrome(desired_capabilities=caps).thenReturn(expected_webdriver)
         for browser in ['chrome', 'googlechrome', 'gc']:
             driver = self.creator.create_driver(browser, None, None)
             self.assertEqual(driver, expected_webdriver)
@@ -295,15 +307,10 @@ class WebDriverCreatorTests(unittest.TestCase):
         profile = mock()
         when(webdriver).FirefoxProfile().thenReturn(profile)
         caps = webdriver.DesiredCapabilities.FIREFOX
-        if SELENIUM_VERSION.major >= 3 and SELENIUM_VERSION.minor >= 8:
-            log_file = self.get_geckodriver_log()
-            when(webdriver).Firefox(capabilities=caps,
-                                    options=None,
-                                    log_path=log_file,
-                                    firefox_profile=profile).thenReturn(expected_webdriver)
-        else:
-            when(webdriver).Firefox(capabilities=caps,
-                                    firefox_profile=profile).thenReturn(expected_webdriver)
+        log_file = self.get_geckodriver_log()
+        when(webdriver).Firefox(capabilities=caps, options=None,
+                                log_path=log_file,
+                                firefox_profile=profile).thenReturn(expected_webdriver)
         for browser in ['ff', 'firefox']:
             driver = self.creator.create_driver(browser, None, None, None)
             self.assertEqual(driver, expected_webdriver)
