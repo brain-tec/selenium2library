@@ -513,10 +513,15 @@ class ElementKeywords(LibraryComponent):
 
     @keyword
     def scroll_element_into_view(self, locator):
-        """Scrolls an element from given ``locator`` into view.
+        """Scrolls an element identified by ``locator`` into view.
+
+        See the `Locating elements` section for details about the locator
+        syntax.
+
+        New in SeleniumLibrary 3.2.0
         """
         element = self.find_element(locator)
-        self.driver.execute_script("arguments[0].scrollIntoView()", element)
+        ActionChains(self.driver).move_to_element(element).perform()
 
     @keyword
     def drag_and_drop(self, locator, target):
