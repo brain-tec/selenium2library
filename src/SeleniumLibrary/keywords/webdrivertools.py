@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import os
+import warnings
 
 from robot.utils import ConnectionCache
 from selenium import webdriver
@@ -151,20 +152,30 @@ class WebDriverCreator(object):
         return webdriver.Safari(**desired_capabilities)
 
     def create_phantomjs(self, desired_capabilities, remote_url):
+        warnings.warn('SeleniumLibrary support for PhantomJS has been deprecated, '
+                      'please use headlesschrome or headlessfirefox instead.')
         if is_truthy(remote_url):
             return self._remote(desired_capabilities, remote_url)
         return webdriver.PhantomJS(**desired_capabilities)
 
     def create_htmlunit(self, desired_capabilities, remote_url):
+        if not desired_capabilities:
+            desired_capabilities['desired_capabilities'] = webdriver.DesiredCapabilities.HTMLUNIT
         return self._remote(desired_capabilities, remote_url)
 
     def create_htmlunit_with_js(self, desired_capabilities, remote_url):
+        if not desired_capabilities:
+            desired_capabilities['desired_capabilities'] = webdriver.DesiredCapabilities.HTMLUNITWITHJS
         return self._remote(desired_capabilities, remote_url)
 
     def create_android(self, desired_capabilities, remote_url):
+        if not desired_capabilities:
+            desired_capabilities['desired_capabilities'] = webdriver.DesiredCapabilities.ANDROID
         return self._remote(desired_capabilities, remote_url)
 
     def create_iphone(self, desired_capabilities, remote_url):
+        if not desired_capabilities:
+            desired_capabilities['desired_capabilities'] = webdriver.DesiredCapabilities.IPHONE
         return self._remote(desired_capabilities, remote_url)
 
     def _remote(self, desired_capabilities, remote_url,
