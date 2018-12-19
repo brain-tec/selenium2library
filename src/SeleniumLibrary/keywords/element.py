@@ -507,6 +507,70 @@ newDiv.parentNode.style.overflow = 'hidden';
         return self.find_element(locator).location['y']
 
     @keyword
+    def click_button(self, locator, modifier=False):
+        """Clicks button identified by ``locator``.
+
+        See the `Locating elements` section for details about the locator
+        syntax. When using the default locator strategy, buttons are
+        searched using ``id``, ``name`` and ``value``.
+
+        See the `Click Element` keyword for details about the
+        ``modifier`` argument.
+
+        The ``modifier`` argument is new in SeleniumLibrary 3.3
+        """
+        if is_falsy(modifier):
+            self.info("Clicking button '%s'." % locator)
+            element = self.find_element(locator, tag='input', required=False)
+            if not element:
+                element = self.find_element(locator, tag='button')
+            element.click()
+        else:
+            self._click_with_modifier(locator, ['button', 'input'], modifier)
+
+    @keyword
+    def click_image(self, locator, modifier=False):
+        """Clicks an image identified by ``locator``.
+
+        See the `Locating elements` section for details about the locator
+        syntax. When using the default locator strategy, images are searched
+        using ``id``, ``name``, ``src`` and ``alt``.
+
+        See the `Click Element` keyword for details about the
+        ``modifier`` argument.
+
+        The ``modifier`` argument is new in SeleniumLibrary 3.3
+        """
+        if is_falsy(modifier):
+            self.info("Clicking image '%s'." % locator)
+            element = self.find_element(locator, tag='image', required=False)
+            if not element:
+                # A form may have an image as it's submit trigger.
+                element = self.find_element(locator, tag='input')
+            element.click()
+        else:
+            self._click_with_modifier(locator, ['image', 'input'], modifier)
+
+    @keyword
+    def click_link(self, locator, modifier=False):
+        """Clicks a link identified by ``locator``.
+
+        See the `Locating elements` section for details about the locator
+        syntax. When using the default locator strategy, links are searched
+        using ``id``, ``name``, ``href`` and the link text.
+
+        See the `Click Element` keyword for details about the
+        ``modifier`` argument.
+
+        The ``modifier`` argument is new in SeleniumLibrary 3.3
+        """
+        if is_falsy(modifier):
+            self.info("Clicking link '%s'." % locator)
+            self.find_element(locator, tag='link').click()
+        else:
+            self._click_with_modifier(locator, ['link', 'link'], modifier)
+
+    @keyword
     def click_element(self, locator, modifier=False):
         """Click element identified by ``locator``.
 
@@ -533,14 +597,21 @@ newDiv.parentNode.style.overflow = 'hidden';
             self.info("Clicking element '%s'." % locator)
             self.find_element(locator).click()
         else:
-            modifier = self.parse_modifier(modifier)
-            action = ActionChains(self.driver)
-            for item in modifier:
-                action.key_down(item)
-            action.click(self.find_element(locator))
-            for item in modifier:
-                action.key_up(item)
-            action.perform()
+            self._click_with_modifier(locator, [None, None], modifier)
+
+    def _click_with_modifier(self, locator, tag, modifier):
+        self.info("Clicking %s '%s' with %s." % (tag if tag[0] else 'element', locator, modifier))
+        modifier = self.parse_modifier(modifier)
+        action = ActionChains(self.driver)
+        for item in modifier:
+            action.key_down(item)
+        element = self.find_element(locator, tag=tag[0], required=False)
+        if not element:
+            element = self.find_element(locator, tag=tag[1])
+        action.click(element)
+        for item in modifier:
+            action.key_up(item)
+        action.perform()
 
     @keyword
     def click_element_at_coordinates(self, locator, xoffset, yoffset):
@@ -833,17 +904,6 @@ return !element.dispatchEvent(evt);
         return special_keys
 
     @keyword
-    def click_link(self, locator):
-        """Clicks a link identified by ``locator``.
-
-        See the `Locating elements` section for details about the locator
-        syntax. When using the default locator strategy, links are searched
-        using ``id``, ``name``, ``href`` and the link text.
-        """
-        self.info("Clicking link '%s'." % locator)
-        self.find_element(locator, tag='link').click()
-
-    @keyword
     def get_all_links(self):
         """Returns a list containing ids of all links found in current page.
 
@@ -889,21 +949,6 @@ return !element.dispatchEvent(evt);
         and ``loglevel`` arguments.
         """
         self.assert_page_not_contains(locator, 'link', message, loglevel)
-
-    @keyword
-    def click_image(self, locator):
-        """Clicks an image identified by ``locator``.
-
-        See the `Locating elements` section for details about the locator
-        syntax. When using the default locator strategy, images are searched
-        using ``id``, ``name``, ``src`` and ``alt``.
-        """
-        self.info("Clicking image '%s'." % locator)
-        element = self.find_element(locator, tag='image', required=False)
-        if not element:
-            # A form may have an image as it's submit trigger.
-            element = self.find_element(locator, tag='input')
-        element.click()
 
     @keyword
     def mouse_down_on_image(self, locator):
