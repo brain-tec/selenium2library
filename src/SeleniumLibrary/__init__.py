@@ -57,8 +57,8 @@ class SeleniumLibrary(DynamicCore):
     SeleniumLibrary uses the Selenium WebDriver modules internally to
     control a web browser. See http://seleniumhq.org for more information
     about Selenium in general and SeleniumLibrary README.rst
-    https://github.com/robotframework/SeleniumLibrary#browser-drivers
-    for more details about webdriver binary instalation.
+    [https://github.com/robotframework/SeleniumLibrary#browser-drivers|Browser drivers chapter]
+    for more details about WebDriver binary installation.
 
     == Table of contents ==
 
@@ -138,8 +138,8 @@ class SeleniumLibrary(DynamicCore):
     | dom          | DOM expression.                     | ``dom:document.images[5]``     |
     | link         | Exact text a link has.              | ``link:The example``           |
     | partial link | Partial link text.                  | ``partial link:he ex``         |
-    | sizzle       | Sizzle selector provided by jQuery. | ``sizzle:div.example``         |
-    | jquery       | Same as the above.                  | ``jquery:div.example``         |
+    | sizzle       | Sizzle selector deprecated.         | ``sizzle:div.example``         |
+    | jquery       | jQuery expression.                  | ``jquery:div.example``         |
     | default      | Keyword specific default behavior.  | ``default:example``            |
 
     See the `Default locator strategy` section below for more information

@@ -168,7 +168,7 @@ class ElementKeywords(LibraryComponent):
 
     @keyword
     def locator_should_match_x_times(self, locator, x, message=None, loglevel='TRACE'):
-        """Deprecated, use `Page Should Contain Element` with ``limit`` argument instead."""
+        """*DEPRECATED in SeleniumLibrary 4.0.*, use `Page Should Contain Element` with ``limit`` argument instead."""
         count = len(self.find_elements(locator))
         x = int(x)
         if count != x:
@@ -657,11 +657,6 @@ newDiv.parentNode.style.overflow = 'hidden';
         self.driver.execute_script("arguments[0].focus();", element)
 
     @keyword
-    def focus(self, locator):
-        """*DEPRECATED in SeleniumLibrary 3.2.* Use `Set Focus To Element` instead."""
-        self.set_focus_to_element(locator)
-
-    @keyword
     def scroll_element_into_view(self, locator):
         """Scrolls an element identified by ``locator`` into view.
 
@@ -796,13 +791,8 @@ return !element.dispatchEvent(evt);
         self.driver.execute_script(script, element, event)
 
     @keyword
-    def simulate(self, locator, event):
-        """*DEPRECATED in SeleniumLibrary 3.2.* Use `Simulate Event` instead."""
-        self.simulate_event(locator, event)
-
-    @keyword
     def press_key(self, locator, key):
-        """Deprecated use `Press Keys` instead."""
+        """*DEPRECATED in SeleniumLibrary 4.0.* use `Press Keys` instead."""
         if key.startswith('\\') and len(key) > 1:
             key = self._map_ascii_key_code_to_key(int(key[1:]))
         element = self.find_element(locator)
@@ -987,17 +977,6 @@ return !element.dispatchEvent(evt);
         and ``loglevel`` arguments.
         """
         self.assert_page_not_contains(locator, 'image', message, loglevel)
-
-    @keyword
-    def get_matching_xpath_count(self, xpath, return_str=True):
-        """*DEPRECATED in SeleniumLibrary 3.2.* Use `Get Element Count` instead."""
-        count = self.get_element_count('xpath:' + xpath)
-        return str(count) if is_truthy(return_str) else count
-
-    @keyword
-    def xpath_should_match_x_times(self, xpath, x, message=None, loglevel='TRACE'):
-        """*DEPRECATED in SeleniumLibrary 3.2.* Use `Page Should Contain Element` with ``limit`` argument instead."""
-        self.locator_should_match_x_times('xpath:'+xpath, x, message, loglevel)
 
     @keyword
     def get_element_count(self, locator):
