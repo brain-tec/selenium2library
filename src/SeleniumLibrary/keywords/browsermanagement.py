@@ -189,6 +189,15 @@ class BrowserManagementKeywords(LibraryComponent):
         Then the `${options}` variable can be used as an argument to
         ``options``.
 
+        Example the ``options`` argument can be used to launch Chomium-based
+        applications which utilize the 
+        [https://bitbucket.org/chromiumembedded/cef/wiki/UsingChromeDriver|Chromium Embedded Framework]
+        . To lauch Chomium-based application, use ``options`` to define
+        `binary_location` attribute and use `add_argument` method to define
+        `remote-debugging-port` port for the application. Once the browser
+        is opened, the test can interact with the embedded web-content of
+        the system under test.
+
         Optional ``service_log_path`` argument defines the name of the
         file where to write the browser driver logs. If the
         ``service_log_path``  argument contain a  marker ``{index}``, it
@@ -216,9 +225,10 @@ class BrowserManagementKeywords(LibraryComponent):
         Example when using
         [https://seleniumhq.github.io/selenium/docs/api/py/webdriver_chrome/selenium.webdriver.chrome.options.html#selenium.webdriver.chrome.options.Options|Chrome options]
         method:
-        | `Open Browser` | http://example.com | Chrome | options=add_argument("--disable-popup-blocking"); add_argument("--ignore-certificate-errors") | # Sting format              |
-        |  ${options} =  |     Get Options    |        |                                                                                               | # Selenium options instance |
-        | `Open Browser` | http://example.com | Chrome | options=${options}                                                                            |                             |
+        | `Open Browser` | http://example.com | Chrome | options=add_argument("--disable-popup-blocking"); add_argument("--ignore-certificate-errors") | # Sting format                    |
+        |  ${options} =  |     Get Options    |        |                                                                                               | # Selenium options instance       |
+        | `Open Browser` | http://example.com | Chrome | options=${options}                                                                            |                                   |
+        | `Open Browser` | None               | Chrome | options=binary_location="/path/to/binary";add_argument("remote-debugging-port=port")          | # Start Chomium-based application |
 
         Example for FirefoxProfile
         | `Open Browser` | http://example.com | Firefox | ff_profile_dir=/path/to/profile                                                  | # Using profile from disk                       |
