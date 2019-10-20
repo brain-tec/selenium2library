@@ -845,7 +845,6 @@ return !element.dispatchEvent(evt);
     def press_keys(self, locator=None, *keys):
         """Simulates the user pressing key(s) to an element or on the active browser.
 
-
         If ``locator`` evaluates as false, see `Boolean arguments` for more
         details, then the ``keys`` are sent to the currently active browser.
         Otherwise element is searched and ``keys`` are send to the element
@@ -893,48 +892,41 @@ return !element.dispatchEvent(evt);
         parsed_keys = self._parse_keys(*keys)
         if is_truthy(locator):
             self.info('Sending key(s) %s to %s element.' % (keys, locator))
+            element = self.find_element(locator)
+            ActionChains(self.driver).click(element).perform()
         else:
             self.info('Sending key(s) %s to page.' % str(keys))
-        self._press_keys(locator, parsed_keys)
-
-    def _press_keys(self, locator, parsed_keys):
-        if is_truthy(locator):
-            element = self.find_element(locator)
-        else:
             element = None
         for parsed_key in parsed_keys:
             actions = ActionChains(self.driver)
-            special_keys = []
             for key in parsed_key:
-                if self._selenium_keys_has_attr(key.original):
-                    special_keys = self._press_keys_special_keys(actions, element, parsed_key,
-                                                                 key, special_keys)
+                if key.special:
+                    self._press_keys_special_keys(actions, element, parsed_key, key)
                 else:
-                    self._press_keys_normal_keys(actions, element, key)
-            for special_key in special_keys:
-                self.info('Releasing special key %s.' % special_key.original)
-                actions.key_up(special_key.converted)
+                    self._press_keys_normal_keys(actions, key)
+            self._special_key_up(actions, parsed_key)
             actions.perform()
 
-    def _press_keys_normal_keys(self, actions, element, key):
+    def _press_keys_normal_keys(self, actions, key):
         self.info('Sending key%s %s' % (plural_or_not(key.converted), key.converted))
-        if element:
-            actions.send_keys_to_element(element, key.converted)
-        else:
-            actions.send_keys(key.converted)
+        actions.send_keys(key.converted)
 
-    def _press_keys_special_keys(self, actions, element, parsed_key, key, special_keys):
+    def _press_keys_special_keys(self, actions, element, parsed_key, key):
         if len(parsed_key) == 1 and element:
             self.info('Pressing special key %s to element.' % key.original)
-            actions.send_keys_to_element(element, key.converted)
+            actions.send_keys(key.converted)
         elif len(parsed_key) == 1 and not element:
             self.info('Pressing special key %s to browser.' % key.original)
             actions.send_keys(key.converted)
         else:
             self.info('Pressing special key %s down.' % key.original)
             actions.key_down(key.converted)
-            special_keys.append(key)
-        return special_keys
+
+    def _special_key_up(self, actions, parsed_key):
+        for key in parsed_key:
+            if key.special:
+                self.info('Releasing special key %s.' % key.original)
+                actions.key_up(key.converted)
 
     @keyword
     def get_all_links(self):
@@ -1155,14 +1147,14 @@ return !element.dispatchEvent(evt);
         return list_keys
 
     def _convert_special_keys(self, keys):
-        KeysRecord = namedtuple('KeysRecord', 'converted, original')
+        KeysRecord = namedtuple('KeysRecord', 'converted, original special')
         converted_keys = []
         for key in keys:
             key = self._parse_aliases(key)
             if self._selenium_keys_has_attr(key):
-                converted_keys.append(KeysRecord(getattr(Keys, key), key))
+                converted_keys.append(KeysRecord(getattr(Keys, key), key, True))
             else:
-                converted_keys.append(KeysRecord(key, key))
+                converted_keys.append(KeysRecord(key, key, False))
         return converted_keys
 
     def _selenium_keys_has_attr(self, key):
