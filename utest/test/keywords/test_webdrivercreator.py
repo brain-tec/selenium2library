@@ -123,15 +123,16 @@ def test_capabilities_resolver_chrome(creator):
 
 def test_chrome(creator):
     expected_webdriver = mock()
-    when(webdriver).Chrome(options=None, service_log_path=None).thenReturn(expected_webdriver)
+    when(webdriver).Chrome(options=None, service_log_path=None,
+                           executable_path='chromedriver').thenReturn(expected_webdriver)
     driver = creator.create_chrome({}, None)
     assert driver == expected_webdriver
 
 
 def test_chrome_with_desired_capabilities(creator):
     expected_webdriver = mock()
-    when(webdriver).Chrome(desired_capabilities={'key': 'value'},
-                           options=None, service_log_path=None).thenReturn(expected_webdriver)
+    when(webdriver).Chrome(desired_capabilities={'key': 'value'}, options=None,
+                           service_log_path=None, executable_path='chromedriver').thenReturn(expected_webdriver)
     driver = creator.create_chrome({'desired_capabilities': {'key': 'value'}}, None)
     assert driver == expected_webdriver
 
@@ -179,7 +180,8 @@ def test_chrome_healdless(creator):
     expected_webdriver = mock()
     options = mock()
     when(webdriver).ChromeOptions().thenReturn(options)
-    when(webdriver).Chrome(options=options, service_log_path=None).thenReturn(expected_webdriver)
+    when(webdriver).Chrome(options=options, service_log_path=None,
+                           executable_path='chromedriver').thenReturn(expected_webdriver)
     driver = creator.create_headless_chrome({}, None)
     assert options.headless == True
     assert driver == expected_webdriver
@@ -206,8 +208,7 @@ def test_firefox(creator):
     profile = mock()
     when(webdriver).FirefoxProfile().thenReturn(profile)
     log_file = get_geckodriver_log()
-    when(webdriver).Firefox(options=None,
-                            firefox_profile=profile,
+    when(webdriver).Firefox(options=None, firefox_profile=profile, executable_path='geckodriver',
                             service_log_path=log_file).thenReturn(expected_webdriver)
     driver = creator.create_firefox({}, None, None)
     assert driver == expected_webdriver
@@ -286,7 +287,7 @@ def test_firefox_profile(creator):
     profile_dir = '/profile/dir'
     when(webdriver).FirefoxProfile(profile_dir).thenReturn(profile)
     log_file = get_geckodriver_log()
-    when(webdriver).Firefox(options=None, service_log_path=log_file,
+    when(webdriver).Firefox(options=None, service_log_path=log_file, executable_path='geckodriver',
                             firefox_profile=profile).thenReturn(expected_webdriver)
     driver = creator.create_firefox({}, None, profile_dir)
     assert driver == expected_webdriver
@@ -299,7 +300,7 @@ def test_firefox_headless(creator):
     options = mock()
     when(webdriver).FirefoxOptions().thenReturn(options)
     log_file = get_geckodriver_log()
-    when(webdriver).Firefox(options=options, service_log_path=log_file,
+    when(webdriver).Firefox(options=options, service_log_path=log_file, executable_path='geckodriver',
                             firefox_profile=profile).thenReturn(expected_webdriver)
     driver = creator.create_headless_firefox({}, None, None)
     assert driver == expected_webdriver
@@ -343,12 +344,13 @@ def test_firefox_headless_with_grid_no_caps(creator):
 
 def test_ie(creator):
     expected_webdriver = mock()
-    when(webdriver).Ie(options=None, service_log_path=None).thenReturn(expected_webdriver)
+    when(webdriver).Ie(options=None, service_log_path=None,
+                       executable_path='IEDriverServer.exe').thenReturn(expected_webdriver)
     driver = creator.create_ie({}, None)
     assert driver == expected_webdriver
 
     when(webdriver).Ie(capabilities={'key': 'value'}, options=None,
-                       service_log_path=None).thenReturn(expected_webdriver)
+                       service_log_path=None, executable_path='IEDriverServer.exe').thenReturn(expected_webdriver)
     driver = creator.create_ie(desired_capabilities={'capabilities': {'key': 'value'}}, remote_url=None,
                                options=None, service_log_path=None)
     assert driver == expected_webdriver
@@ -391,8 +393,9 @@ def test_ie_no_browser_name(creator):
 
 
 def test_edge(creator):
+    executable_path = 'MicrosoftWebDriver.exe'
     expected_webdriver = mock()
-    when(webdriver).Edge(service_log_path=None).thenReturn(expected_webdriver)
+    when(webdriver).Edge(service_log_path=None, executable_path=executable_path).thenReturn(expected_webdriver)
     when(creator)._has_options(ANY).thenReturn(False)
     driver = creator.create_edge({}, None)
     assert driver == expected_webdriver
@@ -435,7 +438,9 @@ def test_edge_no_browser_name(creator):
 
 def test_opera(creator):
     expected_webdriver = mock()
-    when(webdriver).Opera(options=None, service_log_path=None).thenReturn(expected_webdriver)
+    executable_path = 'operadriver'
+    when(webdriver).Opera(options=None, service_log_path=None,
+                          executable_path=executable_path).thenReturn(expected_webdriver)
     driver = creator.create_opera({}, None)
     assert driver == expected_webdriver
 
@@ -478,7 +483,8 @@ def test_opera_no_browser_name(creator):
 
 def test_safari(creator):
     expected_webdriver = mock()
-    when(webdriver).Safari().thenReturn(expected_webdriver)
+    executable_path = '/usr/bin/safaridriver'
+    when(webdriver).Safari(executable_path=executable_path).thenReturn(expected_webdriver)
     driver = creator.create_safari({}, None)
     assert driver == expected_webdriver
 
@@ -520,7 +526,8 @@ def test_safari_no_broser_name(creator):
 
 def test_phantomjs(creator):
     expected_webdriver = mock()
-    when(webdriver).PhantomJS(service_log_path=None).thenReturn(expected_webdriver)
+    executable_path = 'phantomjs'
+    when(webdriver).PhantomJS(service_log_path=None, executable_path=executable_path).thenReturn(expected_webdriver)
     driver = creator.create_phantomjs({}, None)
     assert driver == expected_webdriver
 
@@ -673,7 +680,10 @@ def test_iphone_no_browser_name(creator):
 
 def test_create_driver_chrome(creator):
     expected_webdriver = mock()
-    when(webdriver).Chrome(options=None, service_log_path=None).thenReturn(expected_webdriver)
+    executable_path = 'chromedriver'
+    when(creator)._get_executable_path(ANY).thenReturn(executable_path)
+    when(webdriver).Chrome(options=None, service_log_path=None,
+                           executable_path=executable_path).thenReturn(expected_webdriver)
     for browser in ['chrome', 'googlechrome', 'gc']:
         driver = creator.create_driver(browser, None, None)
         assert driver == expected_webdriver
@@ -684,7 +694,9 @@ def test_create_driver_firefox(creator):
     profile = mock()
     when(webdriver).FirefoxProfile().thenReturn(profile)
     log_file = get_geckodriver_log()
-    when(webdriver).Firefox(options=None, service_log_path=log_file,
+    executable_path = 'geckodriver'
+    when(creator)._get_executable_path(ANY).thenReturn(executable_path)
+    when(webdriver).Firefox(options=None, service_log_path=log_file, executable_path=executable_path,
                             firefox_profile=profile).thenReturn(expected_webdriver)
     for browser in ['ff', 'firefox']:
         driver = creator.create_driver(browser, None, None, None)
@@ -693,8 +705,10 @@ def test_create_driver_firefox(creator):
 
 def test_create_driver_ie(creator):
     expected_webdriver = mock()
-    when(webdriver).Ie(options=None,
-                       service_log_path=None).thenReturn(expected_webdriver)
+    executable_path = 'IEDriverServer.exe'
+    when(creator)._get_executable_path(ANY).thenReturn(executable_path)
+    when(webdriver).Ie(options=None, service_log_path=None,
+                       executable_path=executable_path).thenReturn(expected_webdriver)
     for browser in ['ie', 'Internet Explorer']:
         driver = creator.create_driver(browser, None, None)
         assert driver == expected_webdriver
