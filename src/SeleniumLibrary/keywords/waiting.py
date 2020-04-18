@@ -165,7 +165,7 @@ class WaitingKeywords(LibraryComponent):
 
     @keyword
     def wait_until_page_contains_element(self, locator, timeout=None,
-                                         error=None):
+                                         error=None, limit=None):
         """Waits until the element ``locator`` appears on the current page.
 
         Fails if ``timeout`` expires before the element appears. See
@@ -174,16 +174,30 @@ class WaitingKeywords(LibraryComponent):
         about the locator syntax.
 
         ``error`` can be used to override the default error message.
+
+        The ``limit`` argument can used to define how many elements the
+        page should contain. When ``limit`` is `None` (default) page can
+        contain one or more elements. When limit is a number, page must
+        contain same number of elements.
+
+        ``limit`` is new in SeleniumLibrary 4.4
         """
+        if is_noney(limit):
+            return self._wait_until(
+                lambda: self.find_element(locator, required=False) is not None,
+                "Element '%s' did not appear in <TIMEOUT>." % locator,
+                timeout, error
+            )
+        limit = int(limit)
         self._wait_until(
-            lambda: self.find_element(locator, required=False) is not None,
-            "Element '%s' did not appear in <TIMEOUT>." % locator,
+            lambda: len(self.find_elements(locator)) == limit,
+            'Page should have contained "%s" %s element(s) within <TIMEOUT>.' % (limit, locator),
             timeout, error
         )
 
     @keyword
     def wait_until_page_does_not_contain_element(self, locator, timeout=None,
-                                                 error=None):
+                                                 error=None, limit=None):
         """Waits until the element ``locator`` disappears from the current page.
 
         Fails if ``timeout`` expires before the element disappears. See
@@ -192,10 +206,24 @@ class WaitingKeywords(LibraryComponent):
         about the locator syntax.
 
         ``error`` can be used to override the default error message.
+
+        The ``limit`` argument can used to define how many elements the
+        page should not contain. When ``limit`` is `None` (default) page can`t
+        contain any elements. When limit is a number, page must not
+        contain same number of elements.
+
+        ``limit`` is new in SeleniumLibrary 4.4
         """
+        if is_noney(limit):
+            return self._wait_until(
+                lambda: self.find_element(locator, required=False) is None,
+                "Element '%s' did not disappear in <TIMEOUT>." % locator,
+                timeout, error
+            )
+        limit = int(limit)
         self._wait_until(
-            lambda: self.find_element(locator, required=False) is None,
-            "Element '%s' did not disappear in <TIMEOUT>." % locator,
+            lambda: len(self.find_elements(locator)) != limit,
+            'Page should have not contained "%s" %s element(s) within <TIMEOUT>.' % (limit, locator),
             timeout, error
         )
 
