@@ -23,7 +23,9 @@ from robot.libraries.BuiltIn import BuiltIn
 from robot.utils import is_string
 from robot.utils.importer import Importer
 
-from SeleniumLibrary.base import DynamicCore, LibraryComponent
+from robotlibcore import DynamicCore
+
+from SeleniumLibrary.base import LibraryComponent
 from SeleniumLibrary.errors import NoOpenBrowser, PluginError
 from SeleniumLibrary.keywords import (AlertKeywords,
                                       BrowserManagementKeywords,
@@ -44,7 +46,7 @@ from SeleniumLibrary.locators import ElementFinder
 from SeleniumLibrary.utils import LibraryListener, timestr_to_secs, is_truthy
 
 
-__version__ = '5.0.0.dev1'
+__version__ = '4.5.0rc2.dev1'
 
 
 class SeleniumLibrary(DynamicCore):
