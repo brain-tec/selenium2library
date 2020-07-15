@@ -46,7 +46,7 @@ from SeleniumLibrary.locators import ElementFinder
 from SeleniumLibrary.utils import LibraryListener, timestr_to_secs, is_truthy
 
 
-__version__ = '4.5.0rc2.dev1'
+__version__ = '4.5.0rc3.dev1'
 
 
 class SeleniumLibrary(DynamicCore):
@@ -467,14 +467,11 @@ class SeleniumLibrary(DynamicCore):
         DynamicCore.__init__(self, libraries)
 
     def run_keyword(self, name, args, kwargs):
-        self._running_keyword = name
         try:
             return DynamicCore.run_keyword(self, name, args, kwargs)
         except Exception:
             self.failure_occurred()
             raise
-        finally:
-            self._running_keyword = None
 
     def get_keyword_tags(self, name):
         tags = list(DynamicCore.get_keyword_tags(self, name))
