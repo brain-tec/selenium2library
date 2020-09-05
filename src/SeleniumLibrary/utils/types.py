@@ -16,12 +16,12 @@
 import os
 
 from robot.utils import is_string
-from robot.utils import PY3, is_truthy, is_falsy
+from robot.utils import is_truthy, is_falsy  # noqa
 
 # Need only for unit tests and can be removed when Approval tests fixes:
 # https://github.com/approvals/ApprovalTests.Python/issues/41
-WINDOWS = os.name == 'nt'
+WINDOWS = os.name == "nt"
 
 
 def is_noney(item):
-    return item is None or is_string(item) and item.upper() == 'NONE'
+    return item is None or is_string(item) and item.upper() == "NONE"

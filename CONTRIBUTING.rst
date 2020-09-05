@@ -107,17 +107,21 @@ needed in internal code. When docstrings are added, they should follow
 `PEP-257`_. See `Documentation`_ section below for more details about
 documentation syntax, generating docs, etc.
 
-We are pretty picky about using whitespace. We use blank lines and
-whitespace in expressions as dictated by
-`PEP-8`_, but we also follow these rules:
+The code should be formatted with `Black`_ and errors found by `flake8`_
+should be fixed. Black and flake8 can be run by using
+command::
 
--  Indentation using spaces, not tabs.
--  No trailing spaces.
--  No extra empty lines at the end of the file.
--  Files must end with a newline.
+    inv lint
 
-The above rules are good with most other code too. Any good editor or
-IDE can be configured to automatically format files according to them.
+By default flake8 ignores line length error E501, but it does not ignore
+warning W503. In practice Black formats list access like this::
+
+    list[1 : 2]
+
+But flake8 will display an warning about it. This should be manually
+fixed to look like::
+
+    list[1:2]
 
 Documentation
 -------------
@@ -222,3 +226,5 @@ the same code as your changes. In that case you should
 .. _test/README.rst`: https://github.com/robotframework/SeleniumLibrary/blob/master/test/README.rst
 .. _sync your fork: https://help.github.com/articles/syncing-a-fork/
 .. _resolve conflicts: https://help.github.com/articles/resolving-a-merge-conflict-from-the-command-line
+.. _Black: https://github.com/psf/black
+.. _flake8: https://gitlab.com/pycqa/flake8
