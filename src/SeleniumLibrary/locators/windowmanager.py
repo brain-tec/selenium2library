@@ -130,19 +130,19 @@ class WindowManager(ContextAware):
     def _select_by_title(self, title):
         self._select_matching(
             lambda window_info: window_info.title == title,
-            "Unable to locate window with title '%s'." % title,
+            f"Unable to locate window with title '{title}'.",
         )
 
     def _select_by_name(self, name):
         self._select_matching(
             lambda window_info: window_info.name == name,
-            "Unable to locate window with name '%s'." % name,
+            f"Unable to locate window with name '{name}'.",
         )
 
     def _select_by_url(self, url):
         self._select_matching(
             lambda window_info: window_info.url == url,
-            "Unable to locate window with URL '%s'." % url,
+            f"Unable to locate window with URL '{url}'.",
         )
 
     def _select_main_window(self):
@@ -164,14 +164,14 @@ class WindowManager(ContextAware):
         if starting_handle:
             self.driver.switch_to.window(starting_handle)
         raise WindowNotFound(
-            "No window matching handle, name, title or URL " "'%s' found." % criteria
+            f"No window matching handle, name, title or URL '{criteria}' found."
         )
 
     def _select_by_last_index(self):
         handles = self.driver.window_handles
         if handles[-1] == self.driver.current_window_handle:
             raise WindowNotFound(
-                "Window with last index is same as " "the current window."
+                "Window with last index is same as the current window."
             )
         self.driver.switch_to.window(handles[-1])
 
@@ -180,7 +180,7 @@ class WindowManager(ContextAware):
             if handle not in excludes:
                 self.driver.switch_to.window(handle)
                 return
-        raise WindowNotFound("No window not matching excludes %s found." % excludes)
+        raise WindowNotFound(f"No window not matching excludes {excludes} found.")
 
     def _select_matching(self, matcher, error):
         try:
