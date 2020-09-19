@@ -13,7 +13,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import re
 from collections import namedtuple
 from inspect import getdoc, isclass
 
@@ -181,6 +180,29 @@ class SeleniumLibrary(DynamicCore):
     | `Click Element` | (//div)[2]           |
 
     The support for the ``(//`` prefix is new in SeleniumLibrary 3.0.
+
+    === Chaining locators ===
+
+    It is possible chain multiple locators together as single locator. Each chained locator must start with locator
+    strategy. Chained locators must be separated with single space, two greater than characters and followed with
+    space. It is also possible mix different locator strategies, example css or xpath. Also a list can also be
+    used to specify multiple locators. This is useful, is some part of locator would match as the locator separator
+    but it should not. Or if there is need to existing WebElement as locator.
+
+    Although all locators support chaining, some locator strategies do not abey the chaining. This is because
+    some locator strategies use JavaScript to find elements and JavaScript is executed for the whole browser context
+    and not for the element found be the previous locator. Chaining is supported by locator strategies which
+    are based on Selenium API, like `xpath` or `css`, but example chaining is not supported by `sizzle` or `jquery
+
+    Examples:
+    | `Click Element` | css:.bar >> xpath://a | # To find a link which is present after an element with class "bar" |
+
+    List examples:
+    | ${locator_list} =             | `Create List`   | css:div#div_id            | xpath://*[text(), " >> "] |
+    | `Page Should Contain Element` | ${locator_list} |                           |                           |
+    | ${element} =                  | Get WebElement  | xpath://*[text(), " >> "] |                           |
+    | ${locator_list} =             | `Create List`   | css:div#div_id            | ${element}                |
+    | `Page Should Contain Element` | ${locator_list} |                           |                           |
 
     == Using WebElements ==
 
@@ -508,15 +530,7 @@ class SeleniumLibrary(DynamicCore):
             intro = f"{intro}\n\n"
             intro = f"{intro}= Plugin: {plugin_doc.name} =\n\n"
             intro = f"{intro}{plugin_doc.doc}"
-        return self._create_toc(intro)
-
-    def _create_toc(self, intro):
-        toc = ["== Table of contents ==", ""]
-        all_match = re.findall(r"(^\=\s)(.+)(\s\=$)", intro, re.MULTILINE)
-        for match in all_match:
-            toc.append(f"- `{match[1]}`")
-        toc.extend(["- `Importing`", "- `Shortcuts`", "- `Keywords`"])
-        return intro.replace("%TOC%", "\n".join(toc))
+        return intro
 
     def register_driver(self, driver, alias):
         """Add's a `driver` to the library WebDriverCache.

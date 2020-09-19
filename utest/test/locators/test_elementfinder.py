@@ -1,4 +1,8 @@
+from pathlib import Path
+
 import pytest
+from approvaltests import verify_all
+from approvaltests.reporters import GenericDiffReporterFactory
 from mockito import any, mock, verify, when, unstub
 from selenium.webdriver.common.by import By
 
@@ -11,6 +15,15 @@ def finder():
     ctx = mock()
     ctx.driver = mock()
     return ElementFinder(ctx)
+
+
+@pytest.fixture
+def reporter():
+    cur_dir = Path(__file__).parent.absolute()
+    reporter_json = cur_dir / ".." / "approvals_reporters.json"
+    factory = GenericDiffReporterFactory()
+    factory.load(reporter_json.absolute())
+    return factory.get_first_working()
 
 
 def teardown_function():
@@ -46,6 +59,11 @@ def test_use_first_separator_when_both_are_used():
 def test_preserve_trailing_whitespace():
     _verify_parse_locator("//foo/bar  ", "xpath", "//foo/bar  ")
     _verify_parse_locator("class=foo  ", "class", "foo  ")
+
+
+def test_strategy_case_is_not_changed():
+    _verify_parse_locator("XPATH://foo/bar  ", "XPATH", "//foo/bar  ")
+    _verify_parse_locator("XPATH=//foo/bar  ", "XPATH", "//foo/bar  ")
 
 
 def test_remove_whitespace_around_prefix_and_separator():
@@ -609,6 +627,82 @@ def test_find_returns_bad_values(finder):
             assert result == []
             result = finder.find(locator, tag="div", required=False, first_only=False)
             assert result == []
+
+
+def test_usage_of_multiple_locators_using_double_arrow_as_separator(finder):
+    driver = _get_driver(finder)
+    div_elements = [_make_mock_element("div")]
+    a_elements = [_make_mock_element("a")]
+    img_elements = [_make_mock_element("img")]
+
+    when(driver).find_elements(By.CSS_SELECTOR, "#test1").thenReturn(div_elements)
+    when(div_elements[0]).find_elements(By.XPATH, "//a").thenReturn(a_elements)
+    when(a_elements[0]).find_elements(By.TAG_NAME, "img").thenReturn(img_elements)
+    when(finder)._is_webelement("css=#test1 >> xpath=//a >> tag=img").thenReturn(False)
+    when(finder)._is_webelement(["xpath=//a", "tag=img"]).thenReturn(False)
+    when(finder)._is_webelement(["tag=img"]).thenReturn(False)
+    when(finder)._is_webelement("tag=img").thenReturn(False)
+    when(finder)._is_webelement(div_elements[0]).thenReturn(True)
+    when(finder)._is_webelement("css=#test1").thenReturn(False)
+    when(finder)._is_webelement(a_elements[0]).thenReturn(True)
+    when(finder)._is_webelement("xpath=//a").thenReturn(False)
+
+    result = finder.find("css=#test1 >> xpath=//a >> tag=img", first_only=False)
+    assert result == img_elements
+
+
+def test_usage_of_multiple_locators_using_list(finder):
+    driver = _get_driver(finder)
+    div_elements = [_make_mock_element("div")]
+    a_elements = [_make_mock_element("a")]
+    img_elements = [_make_mock_element("img")]
+
+    list_of_locators = ["css:#test1", "xpath://a", "tag:img"]
+
+    when(driver).find_elements(By.CSS_SELECTOR, "#test1").thenReturn(div_elements)
+    when(div_elements[0]).find_elements(By.XPATH, "//a").thenReturn(a_elements)
+    when(a_elements[0]).find_elements(By.TAG_NAME, "img").thenReturn(img_elements)
+    when(finder)._is_webelement(list_of_locators).thenReturn(False)
+    when(finder)._is_webelement(["xpath://a", "tag:img"]).thenReturn(False)
+    when(finder)._is_webelement(["tag:img"]).thenReturn(False)
+    when(finder)._is_webelement("tag:img").thenReturn(False)
+    when(finder)._is_webelement(div_elements[0]).thenReturn(True)
+    when(finder)._is_webelement("css:#test1").thenReturn(False)
+    when(finder)._is_webelement(a_elements[0]).thenReturn(True)
+    when(finder)._is_webelement("xpath://a").thenReturn(False)
+
+    result = finder.find(list_of_locators, first_only=False)
+    assert result == img_elements
+
+
+def test_localtor_split(finder: ElementFinder, reporter: GenericDiffReporterFactory):
+    results = [
+        finder._split_locator("//div"),
+        finder._split_locator("xpath://div"),
+        finder._split_locator("xpath=//div"),
+        finder._split_locator('//*[text(), " >> "]'),
+        finder._split_locator('//*[text(), " >> "] >> css:foobar'),
+        finder._split_locator('//*[text(), " >> "] >> //div'),
+        finder._split_locator('//*[text(), " >> "] >> css:foobar >> id:tidii'),
+        finder._split_locator(
+            "identifier:id >> id=name >> name=id >> xpath://a >> dom=name >> link=id >> partial link=something >> "
+            'css=#name >> class:name >> jquery=dom.find("foobar") >> sizzle:query.find("tidii") >> '
+            "tag:name >> scLocator:tidii"
+        ),
+        finder._split_locator(['//*[text(), " >> "]', "css:foobar", "tidii"]),
+        finder._split_locator("xpath://*  >>  xpath://div"),
+        finder._split_locator("xpAtH://* >> xPAth://div"),
+        finder._split_locator("xpath : //a >> xpath : //div"),
+        finder._split_locator('//*[text(), " >> css:"]'),
+    ]
+    verify_all("Split multi locator", results, reporter=reporter)
+
+
+def test_locator_split_with_non_strings(finder: ElementFinder):
+    assert finder._split_locator([]) == []
+    assert finder._split_locator(None) == [None]
+    locator = object
+    assert finder._split_locator(locator) == [locator]
 
 
 def _make_mock_elements(*tags):

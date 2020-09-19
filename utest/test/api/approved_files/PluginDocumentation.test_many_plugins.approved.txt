@@ -11,22 +11,7 @@ about Selenium in general and SeleniumLibrary README.rst
 [https://github.com/robotframework/SeleniumLibrary#browser-drivers|Browser drivers chapter]
 for more details about WebDriver binary installation.
 
-== Table of contents ==
-
-- `Locating elements`
-- `Browser and Window`
-- `Timeouts, waits, and delays`
-- `Run-on-failure functionality`
-- `Boolean arguments`
-- `EventFiringWebDriver`
-- `Thread support`
-- `Plugins`
-- `Plugin: my_lib`
-- `my_lib Heading 1`
-- `Plugin: plugin_with_event_firing_webdriver`
-- `Importing`
-- `Shortcuts`
-- `Keywords`
+%TOC%
 
 = Locating elements =
 
@@ -142,6 +127,29 @@ Examples:
 | `Click Element` | (//div)[2]           |
 
 The support for the ``(//`` prefix is new in SeleniumLibrary 3.0.
+
+=== Chaining locators ===
+
+It is possible chain multiple locators together as single locator. Each chained locator must start with locator
+strategy. Chained locators must be separated with single space, two greater than characters and followed with
+space. It is also possible mix different locator strategies, example css or xpath. Also a list can also be
+used to specify multiple locators. This is useful, is some part of locator would match as the locator separator
+but it should not. Or if there is need to existing WebElement as locator.
+
+Although all locators support chaining, some locator strategies do not abey the chaining. This is because
+some locator strategies use JavaScript to find elements and JavaScript is executed for the whole browser context
+and not for the element found be the previous locator. Chaining is supported by locator strategies which
+are based on Selenium API, like `xpath` or `css`, but example chaining is not supported by `sizzle` or `jquery
+
+Examples:
+| `Click Element` | css:.bar >> xpath://a | # To find a link which is present after an element with class "bar" |
+
+List examples:
+| ${locator_list} =             | `Create List`   | css:div#div_id            | xpath://*[text(), " >> "] |
+| `Page Should Contain Element` | ${locator_list} |                           |                           |
+| ${element} =                  | Get WebElement  | xpath://*[text(), " >> "] |                           |
+| ${locator_list} =             | `Create List`   | css:div#div_id            | ${element}                |
+| `Page Should Contain Element` | ${locator_list} |                           |                           |
 
 == Using WebElements ==
 
@@ -379,20 +387,6 @@ This is heading 1 documentation.
 
  This is heading 2 documentation.
 
-= Plugin: plugin_with_event_firing_webdriver =
+= Plugin: my_lib_args =
 
-This is example for plugin_with_event_firing_webdriver plugin documentation.
-
-It may contains many chapters and there might be many words
-in the documentation. This is really boring example but let
-see how it looks like in the SeleniumLibrary docs.
-
-There might be reference to keywords, like `Open Browser`
-
-== plugin_with_event_firing_webdriver Heading 2 part 1 ==
-
-This is chapter in heading 2.
-
-== plugin_with_event_firing_webdriver Heading 2 part 2==
-
-This is another chapter in heading 2
+No plugin documentation found.

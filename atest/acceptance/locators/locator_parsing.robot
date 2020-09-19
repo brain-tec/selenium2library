@@ -35,3 +35,22 @@ Locator with separator and with matchign prefix cannot be used as-is
     Run Keyword And Expect Error
     ...    Page should have contained element 'id:problematic' but did not.
     ...    Page Should Contain Element    id:problematic
+
+Multiple Locators with double arrows as separator should work
+    Page Should Contain Element    css:div#div_id >> xpath:a[6] >> id:image1_id
+
+Multiple Locators strategy should be case-insensitive
+    Page Should Contain Element    cSs=div#div_id >> XpaTh=a[6] >> iD=image1_id
+
+Multiple Locators as a List should work
+    ${element} =   Get WebElement    id:foo:bar
+    ${locator_list} =    Create List    id:div_id    ${element}    id:bar=foo
+    Page Should Contain Element    ${locator_list}
+
+When One Of Locator From Multiple Locators Is Not Found Keyword Fails
+    Run Keyword And Expect Error
+    ...    Element with locator 'id:not_here' not found.
+    ...    Page Should Contain Element    css=div#div_id >> id:not_here >> iD=image1_id
+
+When One Of Locator From Multiple Locators Matches Multiple Elements Keyword Should Not Fail
+    Page Should Contain Element    xpath://div >> id=image1_id

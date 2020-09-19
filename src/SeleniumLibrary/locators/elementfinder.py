@@ -13,6 +13,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import re
+from typing import Union
 
 from robot.api import logger
 from robot.utils import NormalizedDict
@@ -67,8 +69,46 @@ class ElementFinder(ContextAware):
                 "normalize-space(descendant-or-self::text())",
             ],
         }
+        self._split_re = re.compile(
+            r" >> (?=identifier ?[:|=]|id ?[:|=]|name ?[:|=]|xpath ?[:|=]|dom ?[:|=]|link ?[:|=]|partial link ?[:|=]"
+            r"|css ?[:|=]|class ?[:|=]|jquery ?[:|=]|sizzle ?[:|=]|tag ?[:|=]|scLocator ?[:|=])",
+            re.IGNORECASE,
+        )
 
-    def find(self, locator, tag=None, first_only=True, required=True, parent=None):
+    def find(
+        self,
+        locator: Union[str, list],
+        tag=None,
+        first_only=True,
+        required=True,
+        parent=None,
+    ):
+        element = parent
+        locators = self._split_locator(locator)
+        for split_locator in locators[:-1]:
+            element = self._find(
+                split_locator, first_only=True, required=True, parent=element
+            )
+        return self._find(locators[-1], tag, first_only, required, element)
+
+    def _split_locator(self, locator: Union[str, list]) -> list:
+        if isinstance(locator, list):
+            return locator
+        if not isinstance(locator, str):
+            return [locator]
+        match = self._split_re.search(locator)
+        if not match:
+            return [locator]
+        parts = []
+        while match:
+            span = match.span()
+            parts.append(locator[:span[0]])
+            locator = locator[span[1]:]
+            match = self._split_re.search(locator)
+        parts.append(locator)
+        return parts
+
+    def _find(self, locator, tag=None, first_only=True, required=True, parent=None):
         element_type = "Element" if not tag else tag.capitalize()
         if parent and not self._is_webelement(parent):
             raise ValueError(
@@ -266,7 +306,7 @@ class ElementFinder(ContextAware):
         if index != -1:
             prefix = locator[:index].strip()
             if prefix in self._strategies:
-                return prefix, locator[index + 1 :].lstrip()
+                return prefix, locator[index + 1:].lstrip()
         return "default", locator
 
     def _get_locator_separator_index(self, locator):
