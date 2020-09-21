@@ -22,7 +22,7 @@ Framework :: Robot Framework
 Framework :: Robot Framework :: Library
 '''.strip().splitlines()
 with open(join(CURDIR, 'src', 'SeleniumLibrary', '__init__.py')) as f:
-    VERSION = re.search("\n__version__ = '(.*)'", f.read()).group(1)
+    VERSION = re.search('\n__version__ = "(.*)"', f.read()).group(1)
 with open(join(CURDIR, 'README.rst')) as f:
     DESCRIPTION = f.read()
 with open(join(CURDIR, 'requirements.txt')) as f:
@@ -43,5 +43,9 @@ setup(
     python_requires  = '>=3.6, <4',
     install_requires = REQUIREMENTS,
     package_dir      = {'': 'src'},
-    packages         = find_packages('src')
+    packages         = find_packages('src'),
+    package_data     ={
+        'SeleniumLibrary':
+            ['*.pyi']
+    }
 )

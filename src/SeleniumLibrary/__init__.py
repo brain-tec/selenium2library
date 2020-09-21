@@ -47,7 +47,7 @@ from SeleniumLibrary.locators import ElementFinder
 from SeleniumLibrary.utils import LibraryListener, timestr_to_secs, is_truthy
 
 
-__version__ = "5.0.0.dev1"
+__version__ = "5.0.0.a1.dev1"
 
 
 class SeleniumLibrary(DynamicCore):
@@ -203,6 +203,8 @@ class SeleniumLibrary(DynamicCore):
     | ${element} =                  | Get WebElement  | xpath://*[text(), " >> "] |                           |
     | ${locator_list} =             | `Create List`   | css:div#div_id            | ${element}                |
     | `Page Should Contain Element` | ${locator_list} |                           |                           |
+
+    Chaining locators in new in SeleniumLibrary 5.0
 
     == Using WebElements ==
 
