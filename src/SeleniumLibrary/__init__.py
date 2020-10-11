@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from collections import namedtuple
+from datetime import timedelta
 from inspect import getdoc, isclass
 from typing import Optional, List
 
@@ -47,10 +48,10 @@ from SeleniumLibrary.keywords import (
 )
 from SeleniumLibrary.keywords.screenshot import EMBED
 from SeleniumLibrary.locators import ElementFinder
-from SeleniumLibrary.utils import LibraryListener, timestr_to_secs, is_truthy
+from SeleniumLibrary.utils import LibraryListener, is_truthy, _convert_timeout
 
 
-__version__ = "5.0.0a4.dev1"
+__version__ = "5.0.0b2.dev1"
 
 
 class SeleniumLibrary(DynamicCore):
@@ -173,9 +174,10 @@ class SeleniumLibrary(DynamicCore):
 
     === Implicit XPath strategy ===
 
-    If the locator starts with ``//`` or ``(//``, the locator is considered
-    to be an XPath expression. In other words, using ``//div`` is equivalent
-    to using explicit ``xpath://div``.
+    If the locator starts with ``//``  or multiple opening parenthesis in front
+    of the ``//``, the locator is considered to be an XPath expression. In other
+    words, using ``//div`` is equivalent to using explicit ``xpath://div`` and
+    ``((//div))`` is equivalent to using explicit ``xpath:((//div))``
 
     Examples:
 
@@ -183,6 +185,7 @@ class SeleniumLibrary(DynamicCore):
     | `Click Element` | (//div)[2]           |
 
     The support for the ``(//`` prefix is new in SeleniumLibrary 3.0.
+    Supporting multiple opening parenthesis is new in SeleniumLibrary 5.0.
 
     === Chaining locators ===
 
@@ -379,32 +382,13 @@ class SeleniumLibrary(DynamicCore):
 
     = Boolean arguments =
 
-    Some keywords accept arguments that are handled as Boolean values true or
-    false. If such an argument is given as a string, it is considered false if
-    it is either empty or case-insensitively equal to ``false``, ``no``, ``off``,
-     ``0`` or ``none``. Other strings are considered true regardless of their value and
-    other argument types are tested using the same
-    [https://docs.python.org/3/library/stdtypes.html#truth-value-testing|rules as in Python].
+    Starting from 5.0 SeleniumLibrary relies on Robot Framework to perform the
+    boolean conversion based on keyword arguments [https://docs.python.org/3/library/typing.html|type hint].
+    More details in Robot Framework
+    [http://robotframework.org/robotframework/latest/RobotFrameworkUserGuide.html#supported-conversions|user guide]
 
-    True examples:
-
-    | `Set Screenshot Directory` | ${RESULTS} | persist=True    | # Strings are generally true.    |
-    | `Set Screenshot Directory` | ${RESULTS} | persist=yes     | # Same as the above.             |
-    | `Set Screenshot Directory` | ${RESULTS} | persist=${TRUE} | # Python True is true.           |
-    | `Set Screenshot Directory` | ${RESULTS} | persist=${42}   | # Numbers other than 0 are true. |
-
-    False examples:
-
-    | `Set Screenshot Directory` | ${RESULTS} | persist=False    | # String false is false.        |
-    | `Set Screenshot Directory` | ${RESULTS} | persist=no       | # Also string no is false.      |
-    | `Set Screenshot Directory` | ${RESULTS} | persist=NONE     | # String NONE is false.         |
-    | `Set Screenshot Directory` | ${RESULTS} | persist=${EMPTY} | # Empty string is false.        |
-    | `Set Screenshot Directory` | ${RESULTS} | persist=${FALSE} | # Python False is false.        |
-    | `Set Screenshot Directory` | ${RESULTS} | persist=${NONE}  | # Python None is false.         |
-
-    Note that prior to SeleniumLibrary 3.0, all non-empty strings, including
-    ``false``, ``no`` and ``none``, were considered true. Starting from
-    SeleniumLibrary 4.0, strings ``0`` and ``off`` are considered as false.
+    Please note SeleniumLibrary 3 and 4 did have own custom methods to covert
+    arguments to boolean values.
 
     = EventFiringWebDriver =
 
@@ -439,8 +423,8 @@ class SeleniumLibrary(DynamicCore):
 
     def __init__(
         self,
-        timeout=5.0,
-        implicit_wait=0.0,
+        timeout=timedelta(seconds=5),
+        implicit_wait=timedelta(seconds=0),
         run_on_failure="Capture Page Screenshot",
         screenshot_root_directory: Optional[str] = None,
         plugins: Optional[str] = None,
@@ -464,8 +448,8 @@ class SeleniumLibrary(DynamicCore):
           Class for wrapping Selenium with
           [https://seleniumhq.github.io/selenium/docs/api/py/webdriver_support/selenium.webdriver.support.event_firing_webdriver.html#module-selenium.webdriver.support.event_firing_webdriver|EventFiringWebDriver]
         """
-        self.timeout = timestr_to_secs(timeout)
-        self.implicit_wait = timestr_to_secs(implicit_wait)
+        self.timeout = _convert_timeout(timeout)
+        self.implicit_wait = _convert_timeout(implicit_wait)
         self.speed = 0.0
         self.run_on_failure_keyword = RunOnFailureKeywords.resolve_keyword(
             run_on_failure
