@@ -1,9 +1,12 @@
 *** Settings ***
-Library           SeleniumLibrary    event_firing_webdriver=${CURDIR}/MyListener.py
+Library           SeleniumLibrary    event_firing_webdriver=${CURDIR}/../../resources/testlibs/MyListener.py
 Resource          resource_event_firing_webdriver.robot
 Suite Setup       Open Browser    ${FRONT PAGE}    ${BROWSER}    alias=event_firing_webdriver
 ...                   remote_url=${REMOTE_URL}    desired_capabilities=${DESIRED_CAPABILITIES}
 Suite Teardown    Close All Browsers
+
+*** Variables ***
+${event_firing_or_none}     ${NONE}
 
 *** Test Cases ***
 Open Browser To Start Page
