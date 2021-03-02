@@ -1,5 +1,5 @@
 *** Settings ***
-Suite Setup       Run Keywords    Go To Front Page    Set Info Loglevel    Prefer Custom Keywords
+Suite Setup       Run Keywords    Go To Front Page    Set Info Loglevel
 Test Teardown     Register Keyword to Run On Failure    Nothing
 Suite Teardown    Set Debug Loglevel
 Resource          ../resource.robot
@@ -11,10 +11,12 @@ ${FAILURE MESSAGE}    Page should not have contained text 'needle'.
 
 *** Test Cases ***
 Run On Failure Keyword Only Called Once
+    [Setup]    Prefer Custom Keywords
     Set Test Variable    ${ON FAIL COUNT}    ${0}
     Register Keyword To Run On Failure    On Fail
     Run Keyword And Ignore Error    Custom Selenium Keyword
     Should Be Equal    ${ON FAIL COUNT}    ${1}    On Failure Keyword called ${ON FAIL COUNT} times.
+    [Teardown]    Set Library Search Order    SeleniumLibrary
 
 Log Title On Failure
     [Documentation]
@@ -26,17 +28,29 @@ Log Title On Failure
     ...    ${FAILURE MESSAGE}
     ...    Page Should Not Contain    needle    loglevel=None
 
-Disable Run on Failure
+Disable Run on Failure With Nothing
     [Documentation]
     ...    LOG 1 No keyword will be run on failure.
     ...    LOG 2.1:2 NONE
-    ...    LOG 3 No keyword will be run on failure.
-    ...    LOG 4.1:2 NONE
     Register Keyword to Run On Failure    Nothing
     Run Keyword And Expect Error
     ...    ${FAILURE MESSAGE}
     ...    Page Should Not Contain    needle    loglevel=None
+
+Disable Run on Failure With Python None
+    [Documentation]
+    ...    LOG 1 No keyword will be run on failure.
+    ...    LOG 2.1:2 NONE
     Register Keyword to Run On Failure    ${NONE}
+    Run Keyword And Expect Error
+    ...    ${FAILURE MESSAGE}
+    ...    Page Should Not Contain    needle    loglevel=None
+
+Disable Run on Failure With String NONE
+    [Documentation]
+    ...    LOG 1 No keyword will be run on failure.
+    ...    LOG 2.1:2 NONE
+    Register Keyword to Run On Failure    NONE
     Run Keyword And Expect Error
     ...    ${FAILURE MESSAGE}
     ...    Page Should Not Contain    needle    loglevel=None
