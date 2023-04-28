@@ -23,6 +23,25 @@ def test_set_selenium_timeout_only_affects_open_browsers():
     verifyNoMoreInteractions(second_browser)
 
 
+def test_action_chain_delay_default():
+    sl = SeleniumLibrary()
+    assert sl.action_chain_delay == 250, f"Delay should have 250"
+
+
+def test_set_action_chain_delay_default():
+    sl = SeleniumLibrary()
+    sl.set_action_chain_delay("3.0")
+    assert sl.action_chain_delay == 3000, f"Delay should have 3000"
+
+    sl.set_action_chain_delay("258 milliseconds")
+    assert sl.action_chain_delay == 258, f"Delay should have 258"
+
+
+def test_get_action_chain_delay_default():
+    sl = SeleniumLibrary()
+    sl.set_action_chain_delay("300 milliseconds")
+    assert sl.get_action_chain_delay() == 0.3
+
 def test_selenium_implicit_wait_default():
     sl = SeleniumLibrary()
     assert sl.implicit_wait == 0.0, "Wait should have 0.0"
@@ -52,6 +71,34 @@ def test_selenium_implicit_wait_get():
     org_value = sl.set_selenium_implicit_wait("1 min")
     assert sl.get_selenium_implicit_wait() == "1 minute"
     assert org_value == "3 seconds"
+
+
+def test_selenium_page_load_timeout_with_default():
+    sl = SeleniumLibrary()
+    assert sl.page_load_timeout == 300.0, "Default page load timeout should be 5 minutes"
+
+
+def test_set_selenium_page_load_timeout():
+    sl = SeleniumLibrary()
+    sl.set_selenium_page_load_timeout("5.0")
+    assert sl.page_load_timeout == 5.0
+
+    sl.set_selenium_page_load_timeout("1 min")
+    assert sl.page_load_timeout == 60.0
+
+
+def test_set_selenium_page_load_timeout_returns_orig_page_load_timeout():
+    sl = SeleniumLibrary(page_load_timeout="20")
+    orig_page_load_timeout = sl.set_selenium_page_load_timeout("1 second")
+
+    assert orig_page_load_timeout == "20 seconds"
+    assert sl.page_load_timeout == 1.0
+
+
+def test_get_selenium_page_load_timeout():
+    sl = SeleniumLibrary(page_load_timeout="15 seconds")
+
+    assert sl.get_selenium_page_load_timeout() == "15 seconds"
 
 
 def test_bad_browser_name():
