@@ -1,35 +1,32 @@
-========================
-SeleniumLibrary 6.1.0rc2
-========================
+=====================
+SeleniumLibrary 6.1.0
+=====================
 
 
 .. default-role:: code
 
 
 SeleniumLibrary_ is a web testing library for `Robot Framework`_ that utilizes
-the Selenium_ tool internally. SeleniumLibrary 6.1.0rc2 is a new release with
+the Selenium_ tool internally. SeleniumLibrary 6.1.0 is a new release with
 some enhancements around timeouts, broadening edge support and removing
 deprecated Opera support, and bug fixes.
-
-All issues targeted for SeleniumLibrary v6.1.0 can be found
-from the `issue tracker`_.
 
 If you have pip_ installed, just run
 
 ::
 
-   pip install --pre --upgrade robotframework-seleniumlibrary
+   pip install --upgrade robotframework-seleniumlibrary
 
 to install the latest available release or use
 
 ::
 
-   pip install robotframework-seleniumlibrary==6.1.0rc2
+   pip install robotframework-seleniumlibrary==6.1.0
 
 to install exactly this version. Alternatively you can download the source
 distribution from PyPI_ and install it manually.
 
-SeleniumLibrary 6.1.0rc2 was released on Saturday April 29, 2023. SeleniumLibrary supports
+SeleniumLibrary 6.1.0 was released on Wednesday May 3, 2023. SeleniumLibrary supports
 Python 3.7+, Selenium 4.0+ and Robot Framework 4.1.3 or higher.
 
 .. _Robot Framework: http://robotframework.org
