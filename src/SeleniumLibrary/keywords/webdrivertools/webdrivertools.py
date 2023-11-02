@@ -145,7 +145,15 @@ class WebDriverCreator:
             return self._remote(remote_url, options=options)
         if not executable_path:
             executable_path = self._get_executable_path(webdriver.chrome.service.Service)
-        service = ChromeService(executable_path=executable_path, log_path=service_log_path)
+        # -- temporary fix to transition selenium to v4.13 from v4.11 and prior
+        from inspect import signature
+        sig = signature(ChromeService)
+        if 'log_output' in str(sig):
+            log_method = {'log_output': service_log_path}
+        else:
+            log_method = {'log_path': service_log_path}
+        # --
+        service = ChromeService(executable_path=executable_path, **log_method)
         return webdriver.Chrome(
             options=options,
             service=service,
@@ -161,7 +169,7 @@ class WebDriverCreator:
     ):
         if not options:
             options = webdriver.ChromeOptions()
-        options.headless = True
+        options.add_argument('--headless=new')
         return self.create_chrome(
             desired_capabilities, remote_url, options, service_log_path, executable_path
         )
@@ -224,7 +232,7 @@ class WebDriverCreator:
                     else:
                         setattr(ff_profile, key, *option[key])
             return ff_profile
-    
+
     @property
     def _geckodriver_log(self):
         log_file = self._get_log_path(
@@ -244,7 +252,7 @@ class WebDriverCreator:
     ):
         if not options:
             options = webdriver.FirefoxOptions()
-        options.headless = True
+        options.add_argument('-headless')
         return self.create_firefox(
             desired_capabilities,
             remote_url,
