@@ -13,9 +13,11 @@ License :: OSI Approved :: Apache Software License
 Operating System :: OS Independent
 Programming Language :: Python
 Programming Language :: Python :: 3
-Programming Language :: Python :: 3.6
-Programming Language :: Python :: 3.7
 Programming Language :: Python :: 3.8
+Programming Language :: Python :: 3.9
+Programming Language :: Python :: 3.10
+Programming Language :: Python :: 3.11
+Programming Language :: Python :: 3.12
 Programming Language :: Python :: 3 :: Only
 Topic :: Software Development :: Testing
 Framework :: Robot Framework
@@ -33,17 +35,18 @@ setup(
     version          = VERSION,
     description      = 'Web testing library for Robot Framework',
     long_description = DESCRIPTION,
-    author           = 'Tatu Aalto',
-    author_email     = 'aalto.tatu@gmail.com',
+    author           = 'Ed Manlove, Yuri Verweij, Lisa Crispin',
+    author_email     = 'emanlove@verizon.net',
     url              = 'https://github.com/robotframework/SeleniumLibrary',
     license          = 'Apache License 2.0',
     keywords         = 'robotframework testing testautomation selenium webdriver web',
     platforms        = 'any',
     classifiers      = CLASSIFIERS,
-    python_requires  = '>=3.6, <4',
+    python_requires  = '>=3.8, <3.12',
     install_requires = REQUIREMENTS,
     package_dir      = {'': 'src'},
     packages         = find_packages('src'),
+    entry_points     = {"console_scripts": ["selib=SeleniumLibrary.entry.__main__:cli"]},
     package_data     ={
         'SeleniumLibrary':
             ['*.pyi']
