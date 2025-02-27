@@ -55,7 +55,7 @@ from SeleniumLibrary.locators import ElementFinder
 from SeleniumLibrary.utils import LibraryListener, is_truthy, _convert_timeout, _convert_delay
 
 
-__version__ = "6.7.0"
+__version__ = "6.7.1"
 
 
 class SeleniumLibrary(DynamicCore):
@@ -238,7 +238,7 @@ class SeleniumLibrary(DynamicCore):
 
     | Custom Locator Strategy | [Arguments] | ${browser} | ${locator} | ${tag} | ${constraints} |
     |   | ${element}= | Execute Javascript | return window.document.getElementById('${locator}'); |
-    |   | [Return] | ${element} |
+    |   | RETURN | ${element} |
 
     This keyword is a reimplementation of the basic functionality of the
     ``id`` locator where ``${browser}`` is a reference to a WebDriver
