@@ -202,7 +202,7 @@ class SeleniumLibrary(DynamicCore):
     used to specify multiple locators. This is useful, is some part of locator would match as the locator separator
     but it should not. Or if there is need to existing WebElement as locator.
 
-    Although all locators support chaining, some locator strategies do not abey the chaining. This is because
+    Although all locators support chaining, some locator strategies do not obey the chaining. This is because
     some locator strategies use JavaScript to find elements and JavaScript is executed for the whole browser context
     and not for the element found be the previous locator. Chaining is supported by locator strategies which
     are based on Selenium API, like `xpath` or `css`, but example chaining is not supported by `sizzle` or `jquery
@@ -214,7 +214,7 @@ class SeleniumLibrary(DynamicCore):
     | ${locator_list} =             | `Create List`   | css:div#div_id             | xpath: //*[text(), " >> "] |
     | `Page Should Contain Element` | ${locator_list} |                            |                            |
     | ${element} =                  | Get WebElement  | xpath: //*[text(), " >> "] |                            |
-    | ${locator_list} =             | `Create List`   | css:div#div_id             | ${element }                |
+    | ${locator_list} =             | `Create List`   | css:div#div_id             | ${element}                 |
     | `Page Should Contain Element` | ${locator_list} |                            |                            |
 
     Chaining locators in new in SeleniumLibrary 5.0
