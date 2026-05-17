@@ -56,7 +56,7 @@ from SeleniumLibrary.utils import (
     is_truthy,
 )
 
-__version__ = "6.8.0"
+__version__ = "6.9.0"
 
 
 class SeleniumLibrary(DynamicCore):
