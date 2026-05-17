@@ -78,7 +78,8 @@ and tooling, amongst all the other contributions he made towards this release. S
 - Review restriction on running ApprovalTests under Windows (`#1884`_)
 - Migrate lint/format tooling to Ruff, update CI matrix, and stabilize cross-platform/firefox tests (`#1978`_)
 
-Yuri along with [Tatu](https://github.com/aaltat) brought in the Secret type into this release.
+Yuri along with [Tatu](https://github.com/aaltat) brought in the Secret type into this release. And thank you
+to [petobarki](https://github.com/petobarki) for reporting and asking for this feature/support.
 
 - Input Password does not accept Secret type (`#1966`_)
 
