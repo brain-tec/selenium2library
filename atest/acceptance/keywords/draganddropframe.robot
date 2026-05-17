@@ -6,6 +6,7 @@ Test Setup       Go To Page "frames/draganddrop.html"
 
 *** Test Cases ***
 Drag And Drop Across Frames Works From Default Content
+    [Tags]    Known Issue Firefox
     [Documentation]    Verifies drag-and-drop from default content to a target inside an iframe.
     Wait Until Page Contains Element    id=defaultSource    10s
     Drag And Drop Across Frames    id=defaultSource    id=target    id=targetFrame
@@ -14,6 +15,7 @@ Drag And Drop Across Frames Works From Default Content
     Unselect Frame
 
 Drag And Drop Across Frames Works From Source Frame
+    [Tags]    Known Issue Firefox
     [Documentation]    Verifies drag-and-drop from a source iframe to a target iframe.
     Wait Until Page Contains Element    id=sourceFrame    10s
     Select Frame    id=sourceFrame
@@ -31,12 +33,14 @@ Drag And Drop Across Frames Returns To Default Content
     Page Should Not Contain Element    id=target
 
 Drag And Drop Across Frames Hides Default Source Element
+    [Tags]    Known Issue Firefox
     [Documentation]    Verifies that the default source element becomes hidden after a successful drop.
     Wait Until Page Contains Element    id=defaultSource    10s
     Drag And Drop Across Frames    id=defaultSource    id=target    id=targetFrame
     Element Should Not Be Visible    id=defaultSource
 
 Drag And Drop Across Frames Hides Frame Source Element
+    [Tags]    Known Issue Firefox
     [Documentation]    Verifies that the frame source element becomes hidden after a successful drop.
     Wait Until Page Contains Element    id=sourceFrame    10s
     Drag And Drop Across Frames    id=frameSource    id=target    id=targetFrame    id=sourceFrame

@@ -12,19 +12,19 @@ jobs:
           - description: latest
             python-version: 3.14.4
             rf-version: 7.4.2
-            selenium-version:  4.43.0
+            selenium-version:  4.44.0
             browser: chrome
           - description: previous
             python-version: 3.12.12
             rf-version: 7.3.2
-            selenium-version: 4.38.0
+            selenium-version: 4.40.0
             browser: chrome
           - description: older_rf_version
             python-version: 3.11.14
             rf-version: 6.1.1
             selenium-version: 4.37.0
             browser: chrome
-          - description: latest
+          - description: latest_firefox
             python-version: 3.14.4
             rf-version: 7.4.1
             selenium-version: 4.39.0

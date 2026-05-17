@@ -43,6 +43,7 @@ import time
 import zipfile
 from contextlib import contextmanager
 import os
+import re
 import sys
 import argparse
 import textwrap
@@ -223,6 +224,11 @@ def execute_tests(interpreter, browser, rf_options, grid, event_firing, port):
         "--exclude",
         "triage",
     ]
+    rf_ver = tuple(
+        int(re.match(r"\d+", x).group()) for x in robot_version.split(".")[:2]
+    )
+    if rf_ver < (7, 4):
+        options.extend(["--exclude", "require-rf-7.4"])
     command = runner
     if grid:
         command += [
